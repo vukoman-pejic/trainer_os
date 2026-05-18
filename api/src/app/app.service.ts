@@ -1,8 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AppService {
-  getData(): { message: string } {
-    return { message: 'Hello API' };
+  constructor(private prisma: PrismaService) {}
+
+  async getHello() {
+    const users = await this.prisma.user.count();
+
+    return {
+      message: 'Trainer API running',
+      users,
+    };
   }
 }

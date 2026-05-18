@@ -76,7 +76,7 @@ model ClientProfile {
 
 model Package {
   id            String  @id @default(uuid())
-  name          String
+  name          String @unique
   sessionCount  Int
   active        Boolean @default(true)
 
