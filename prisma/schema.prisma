@@ -1,13 +1,174 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  TRAINER
+  CLIENT
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  RESCHEDULED
+}
+
+enum ActorType {
+  TRAINER
+  CLIENT
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  REQUEST_REJECTED
+  REQUEST_APPROVED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  phone        String?
+  role         UserRole
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  clientProfile ClientProfile?
+  notifications Notification[]
+}
+
+model ClientProfile {
+  id          String   @id @default(uuid())
+  userId       String   @unique
+  notes        String?
+  injuries     String?
+  goals        String?
+  dateOfBirth  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  clientPackages    ClientPackage[]
+  trainingRequests  TrainingRequest[]
+  bookings          Booking[]
+}
+
+model Package {
+  id            String  @id @default(uuid())
+  name          String
+  sessionCount  Int
+  active        Boolean @default(true)
+
+  clientPackages ClientPackage[]
+}
+
+model ClientPackage {
+  id                String        @id @default(uuid())
+  clientId          String
+  packageId         String
+  remainingSessions Int
+  paymentStatus     PaymentStatus
+  assignedAt        DateTime      @default(now())
+  active            Boolean       @default(true)
+
+  client  ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  package Package       @relation(fields: [packageId], references: [id])
+
+  bookings Booking[]
+
+}
+
+model TrainingRequest {
+  id               String        @id @default(uuid())
+  clientId         String
+  requestedStartAt DateTime
+  requestedEndAt   DateTime
+  note             String?
+  status           RequestStatus @default(PENDING)
+  reviewedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  client ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  booking Booking?
+}
+
+model Booking {
+  id                  String        @id @default(uuid())
+  clientId            String
+  trainingRequestId   String?       @unique
+  clientPackageId     String
+  startAt             DateTime
+  endAt               DateTime
+  status              BookingStatus @default(CONFIRMED)
+  createdBy           ActorType
+  cancelledBy         ActorType?
+  cancelledAt         DateTime?
+  cancellationReason  String?
+  completedAt         DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  client          ClientProfile    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  trainingRequest TrainingRequest? @relation(fields: [trainingRequestId], references: [id])
+  clientPackage   ClientPackage    @relation(fields: [clientPackageId], references: [id])
+
+  workoutLog WorkoutLog?
+}
+
+model WorkoutLog {
+  id        String   @id @default(uuid())
+  bookingId String   @unique
+  notes     String?
+  createdAt DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  exercises ExerciseLog[]
+}
+
+model ExerciseLog {
+  id           String @id @default(uuid())
+  workoutLogId String
+  name         String
+  sets         Int?
+  reps         Int?
+  weight       Float?
+  notes        String?
+
+  workoutLog WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
