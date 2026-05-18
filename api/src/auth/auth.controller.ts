@@ -1,6 +1,8 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { Get, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -10,4 +12,12 @@ export class AuthController {
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
+
+@UseGuards(JwtAuthGuard)
+@Get('protected')
+protectedRoute() {
+  return {
+    message: 'Protected route works',
+  };
+}
 }
