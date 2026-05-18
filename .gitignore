@@ -64,3 +64,4 @@ prisma/dev.db-journal
 
 # logs
 *.log
+/generated/prisma
