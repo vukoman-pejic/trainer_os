@@ -16,4 +16,14 @@ export class UsersService {
       where: { id },
     });
   }
+
+  updatePassword(userId: string, passwordHash: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash,
+        mustChangePassword: false,
+      },
+    });
+  }
 }

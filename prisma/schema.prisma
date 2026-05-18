@@ -45,40 +45,44 @@ enum NotificationType {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  firstName    String
-  lastName     String
-  phone        String?
-  role         UserRole
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  email              String   @unique
+  passwordHash       String
+  firstName          String
+  lastName           String
+  phone              String?
+  role               UserRole
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   clientProfile ClientProfile?
   notifications Notification[]
+  clients       ClientProfile[] @relation("TrainerClients")
 }
 
 model ClientProfile {
-  id          String   @id @default(uuid())
-  userId       String   @unique
-  notes        String?
-  injuries     String?
-  goals        String?
-  dateOfBirth  DateTime?
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  trainerId   String
+  notes       String?
+  injuries    String?
+  goals       String?
+  dateOfBirth DateTime?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trainer User @relation("TrainerClients", fields: [trainerId], references: [id], onDelete: Cascade)
 
-  clientPackages    ClientPackage[]
-  trainingRequests  TrainingRequest[]
-  bookings          Booking[]
+  clientPackages   ClientPackage[]
+  trainingRequests TrainingRequest[]
+  bookings         Booking[]
 }
 
 model Package {
-  id            String  @id @default(uuid())
-  name          String @unique
-  sessionCount  Int
-  active        Boolean @default(true)
+  id           String  @id @default(uuid())
+  name         String  @unique
+  sessionCount Int
+  active       Boolean @default(true)
 
   clientPackages ClientPackage[]
 }
@@ -96,7 +100,6 @@ model ClientPackage {
   package Package       @relation(fields: [packageId], references: [id])
 
   bookings Booking[]
-
 }
 
 model TrainingRequest {
@@ -116,20 +119,20 @@ model TrainingRequest {
 }
 
 model Booking {
-  id                  String        @id @default(uuid())
-  clientId            String
-  trainingRequestId   String?       @unique
-  clientPackageId     String
-  startAt             DateTime
-  endAt               DateTime
-  status              BookingStatus @default(CONFIRMED)
-  createdBy           ActorType
-  cancelledBy         ActorType?
-  cancelledAt         DateTime?
-  cancellationReason  String?
-  completedAt         DateTime?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  id                 String        @id @default(uuid())
+  clientId           String
+  trainingRequestId  String?       @unique
+  clientPackageId    String
+  startAt            DateTime
+  endAt              DateTime
+  status             BookingStatus @default(CONFIRMED)
+  createdBy          ActorType
+  cancelledBy        ActorType?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  completedAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   client          ClientProfile    @relation(fields: [clientId], references: [id], onDelete: Cascade)
   trainingRequest TrainingRequest? @relation(fields: [trainingRequestId], references: [id])
@@ -150,7 +153,7 @@ model WorkoutLog {
 }
 
 model ExerciseLog {
-  id           String @id @default(uuid())
+  id           String  @id @default(uuid())
   workoutLogId String
   name         String
   sets         Int?
