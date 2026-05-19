@@ -68,17 +68,24 @@ export class ClientsService {
     });
   }
 
-  async findOne(trainerId: string, clientId: string) {
-    return this.prisma.clientProfile.findFirst({
-      where: {
-        id: clientId,
-        trainerId,
+async findOne(trainerId: string, clientId: string) {
+  return this.prisma.clientProfile.findFirst({
+    where: {
+      id: clientId,
+      trainerId,
+    },
+    include: {
+      user: true,
+      clientPackages: {
+        where: {
+          active: true,
+        },
+        include: {
+          package: true,
+        },
       },
-      include: {
-        user: true,
-        clientPackages: true,
-        bookings: true,
-      },
-    });
-  }
+      bookings: true,
+    },
+  });
+}
 }

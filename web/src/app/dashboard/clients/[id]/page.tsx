@@ -1,12 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Mail, Phone, Target, HeartPulse, StickyNote } from 'lucide-react';
+import {
+  Mail,
+  Phone,
+  Target,
+  HeartPulse,
+  StickyNote,
+} from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { TrainerLayout } from '../../../../components/layouts/trainer-layout';
 import { Card } from '../../../../components/ui/card';
 import { apiFetch } from '../../../../lib/api';
 import { useAuthGuard } from '../../../../hooks/use-auth-guard';
+import { Button } from '../../../../components/ui/button';
 
 type ClientDetails = {
   id: string;
@@ -20,6 +27,22 @@ type ClientDetails = {
     email: string;
     phone?: string | null;
   };
+  clientPackages: {
+    id: string;
+    remainingSessions: number;
+    paymentStatus: 'PAID' | 'UNPAID';
+    package: {
+      id: string;
+      name: string;
+      sessionCount: number;
+    };
+  }[];
+};
+
+type PackageOption = {
+  id: string;
+  name: string;
+  sessionCount: number;
 };
 
 export default function ClientDetailsPage() {
@@ -32,21 +55,71 @@ export default function ClientDetailsPage() {
 
   const [client, setClient] =
     useState<ClientDetails | null>(null);
+  const [packages, setPackages] = useState<
+    PackageOption[]
+  >([]);
   const [loading, setLoading] =
     useState(true);
+  const [assigning, setAssigning] =
+    useState(false);
   const [error, setError] =
     useState('');
+
+  async function loadClientData() {
+    const clientData = await apiFetch(
+      `/clients/${clientId}`
+    );
+
+    const packagesData =
+      await apiFetch('/packages');
+
+    setClient(clientData);
+    setPackages(packagesData);
+  }
+
+  async function assignPackage(packageId: string) {
+    try {
+      setAssigning(true);
+
+      await apiFetch(`/clients/${clientId}/packages`, {
+        method: 'POST',
+        body: JSON.stringify({
+          packageId,
+        }),
+      });
+
+      await loadClientData();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setAssigning(false);
+    }
+  }
+
+  async function markPaid(clientPackageId: string) {
+    try {
+      await apiFetch(
+        `/client-packages/${clientPackageId}/payment`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            paymentStatus: 'PAID',
+          }),
+        }
+      );
+
+      await loadClientData();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  }
 
   useEffect(() => {
     if (!authorized) return;
 
-    async function loadClient() {
+    async function init() {
       try {
-        const data = await apiFetch(
-          `/clients/${clientId}`
-        );
-
-        setClient(data);
+        await loadClientData();
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -54,7 +127,7 @@ export default function ClientDetailsPage() {
       }
     }
 
-    loadClient();
+    init();
   }, [authorized, clientId]);
 
   if (!authorized) {
@@ -153,13 +226,73 @@ export default function ClientDetailsPage() {
 
           <div className="mt-8">
             <Card className="p-6">
-              <h2 className="text-xl font-semibold">
-                Package
+              <h2 className="mb-6 text-xl font-semibold">
+                Package Management
               </h2>
 
-              <p className="mt-3 text-slate-400">
-                Package assignment coming next...
-              </p>
+              {client.clientPackages.length > 0 ? (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {
+                        client.clientPackages[0]
+                          .package.name
+                      }
+                    </p>
+
+                    <p className="mt-2 text-slate-400">
+                      Remaining sessions:{' '}
+                      {
+                        client.clientPackages[0]
+                          .remainingSessions
+                      }
+                    </p>
+
+                    <p className="mt-2 text-slate-400">
+                      Payment:{' '}
+                      {
+                        client.clientPackages[0]
+                          .paymentStatus
+                      }
+                    </p>
+                  </div>
+
+                  {client.clientPackages[0]
+                    .paymentStatus ===
+                    'UNPAID' && (
+                    <Button
+                      onClick={() =>
+                        markPaid(
+                          client.clientPackages[0]
+                            .id
+                        )
+                      }
+                    >
+                      Mark Paid
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-slate-400">
+                    No active package assigned
+                  </p>
+
+                  <div className="flex flex-wrap gap-3">
+                    {packages.map((pkg) => (
+                      <Button
+                        key={pkg.id}
+                        disabled={assigning}
+                        onClick={() =>
+                          assignPackage(pkg.id)
+                        }
+                      >
+                        {pkg.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Card>
           </div>
         </>
