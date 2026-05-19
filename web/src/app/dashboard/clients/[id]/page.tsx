@@ -76,16 +76,13 @@ export default function ClientDetailsPage() {
   const clientId = params.id as string;
 
   const today = new Date();
-  const todayDate = today
-    .toISOString()
-    .split('T')[0];
+  const todayDate = today.toISOString().split('T')[0];
 
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const defaultDate = tomorrow
-    .toISOString()
-    .split('T')[0];
+  const defaultDate =
+    tomorrow.toISOString().split('T')[0];
 
   const [client, setClient] =
     useState<ClientDetails | null>(null);
@@ -100,6 +97,16 @@ export default function ClientDetailsPage() {
   const [assigning, setAssigning] =
     useState(false);
   const [bookingLoading, setBookingLoading] =
+    useState(false);
+  const [cancelLoadingId, setCancelLoadingId] =
+    useState<string | null>(null);
+  const [rescheduleBookingId, setRescheduleBookingId] =
+    useState<string | null>(null);
+  const [rescheduleDate, setRescheduleDate] =
+    useState(defaultDate);
+  const [rescheduleTime, setRescheduleTime] =
+    useState('');
+  const [rescheduleLoading, setRescheduleLoading] =
     useState(false);
   const [selectedDate, setSelectedDate] =
     useState(defaultDate);
@@ -190,6 +197,65 @@ export default function ClientDetailsPage() {
       alert(err.message);
     } finally {
       setBookingLoading(false);
+    }
+  }
+
+  async function cancelBooking(
+    bookingId: string
+  ) {
+    try {
+      setCancelLoadingId(bookingId);
+
+      await apiFetch(
+        `/bookings/${bookingId}/cancel`,
+        {
+          method: 'PATCH',
+        }
+      );
+
+      await loadClientData();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setCancelLoadingId(null);
+    }
+  }
+
+  async function rescheduleBooking() {
+    if (
+      !rescheduleBookingId ||
+      !rescheduleDate ||
+      !rescheduleTime
+    ) {
+      alert('Select date and time');
+      return;
+    }
+
+    try {
+      setRescheduleLoading(true);
+
+      const isoDate =
+        `${rescheduleDate}T${rescheduleTime}:00`;
+
+      await apiFetch(
+        `/bookings/${rescheduleBookingId}/reschedule`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            startAt: isoDate,
+          }),
+        }
+      );
+
+      setRescheduleBookingId(null);
+      setRescheduleDate(defaultDate);
+      setRescheduleTime('');
+
+      await loadClientData();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setRescheduleLoading(false);
     }
   }
 
@@ -395,8 +461,6 @@ export default function ClientDetailsPage() {
               <div className="space-y-4">
                 <input
                   type="date"
-                  lang="sr-RS"
-                  locale="sr"
                   min={todayDate}
                   value={selectedDate}
                   onChange={(e) =>
@@ -468,9 +532,99 @@ export default function ClientDetailsPage() {
                         )}
                       </p>
 
-                      <p className="mt-1 text-sm text-slate-400">
-                        {booking.status}
-                      </p>
+                      {rescheduleBookingId === booking.id ? (
+                        <div className="mt-4 space-y-3">
+                          <input
+                            type="date"
+                            min={todayDate}
+                            value={rescheduleDate}
+                            onChange={(e) =>
+                              setRescheduleDate(e.target.value)
+                            }
+                            className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                          />
+
+                          <select
+                            value={rescheduleTime}
+                            onChange={(e) =>
+                              setRescheduleTime(e.target.value)
+                            }
+                            className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                          >
+                            <option value="">
+                              Select time
+                            </option>
+
+                            {SLOT_OPTIONS.map((slot) => (
+                              <option
+                                key={slot}
+                                value={slot}
+                              >
+                                {slot}
+                              </option>
+                            ))}
+                          </select>
+
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              disabled={rescheduleLoading}
+                              onClick={rescheduleBooking}
+                            >
+                              {rescheduleLoading
+                                ? 'Saving...'
+                                : 'Save'}
+                            </Button>
+
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setRescheduleBookingId(null);
+                                setRescheduleTime('');
+                              }}
+                            >
+                              Close
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-3 flex items-center justify-between">
+                          <p className="text-sm text-slate-400">
+                            {booking.status}
+                          </p>
+
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setRescheduleBookingId(
+                                  booking.id
+                                );
+                                setRescheduleDate(defaultDate);
+                              }}
+                            >
+                              Reschedule
+                            </Button>
+
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={
+                                cancelLoadingId === booking.id
+                              }
+                              onClick={() =>
+                                cancelBooking(booking.id)
+                              }
+                            >
+                              {cancelLoadingId === booking.id
+                                ? 'Cancelling...'
+                                : 'Cancel'}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
