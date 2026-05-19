@@ -4,9 +4,13 @@ import { useAuthGuard } from '../../../hooks/use-auth-guard';
 import { Card } from '../../../components/ui/card';
 
 export default function ClientDashboardPage() {
-  useAuthGuard({
+  const authorized = useAuthGuard({
     requiredRole: 'CLIENT',
   });
+
+  if (!authorized) {
+    return null;
+  }
 
   return (
     <main className="min-h-screen bg-[#07070B] text-white p-10">

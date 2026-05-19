@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   getRole,
   getToken,
@@ -17,6 +17,8 @@ export function useAuthGuard({
   requiredRole?: UserRole;
 } = {}) {
   const router = useRouter();
+  const [authorized, setAuthorized] =
+    useState(false);
 
   useEffect(() => {
     const token = getToken();
@@ -65,6 +67,11 @@ export function useAuthGuard({
       } else {
         router.replace('/client/dashboard');
       }
+      return;
     }
+
+    setAuthorized(true);
   }, [router, requirePasswordChange, requiredRole]);
+
+  return authorized;
 }

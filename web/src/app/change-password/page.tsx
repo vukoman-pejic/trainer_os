@@ -12,7 +12,7 @@ import { useAuthGuard } from '../../hooks/use-auth-guard';
 import { getRole } from '../../lib/auth';
 
 export default function ChangePasswordPage() {
-  useAuthGuard({
+  const authorized = useAuthGuard({
     requirePasswordChange: true,
   });
 
@@ -26,6 +26,10 @@ export default function ChangePasswordPage() {
     useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  if (!authorized) {
+    return null;
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
