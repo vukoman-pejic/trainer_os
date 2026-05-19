@@ -7,6 +7,7 @@ import {
   Target,
   HeartPulse,
   StickyNote,
+  Calendar,
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { TrainerLayout } from '../../../../components/layouts/trainer-layout';
@@ -45,6 +46,27 @@ type PackageOption = {
   sessionCount: number;
 };
 
+type Booking = {
+  id: string;
+  startAt: string;
+  endAt: string;
+  status: string;
+};
+
+const SLOT_OPTIONS = [
+  '08:00',
+  '09:00',
+  '10:00',
+  '11:00',
+  '16:00',
+  '17:00',
+  '18:00',
+  '19:00',
+  '20:00',
+  '21:00',
+  '22:00',
+];
+
 export default function ClientDetailsPage() {
   const authorized = useAuthGuard({
     requiredRole: 'TRAINER',
@@ -53,15 +75,36 @@ export default function ClientDetailsPage() {
   const params = useParams();
   const clientId = params.id as string;
 
+  const today = new Date();
+  const todayDate = today
+    .toISOString()
+    .split('T')[0];
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const defaultDate = tomorrow
+    .toISOString()
+    .split('T')[0];
+
   const [client, setClient] =
     useState<ClientDetails | null>(null);
   const [packages, setPackages] = useState<
     PackageOption[]
   >([]);
+  const [bookings, setBookings] = useState<
+    Booking[]
+  >([]);
   const [loading, setLoading] =
     useState(true);
   const [assigning, setAssigning] =
     useState(false);
+  const [bookingLoading, setBookingLoading] =
+    useState(false);
+  const [selectedDate, setSelectedDate] =
+    useState(defaultDate);
+  const [selectedTime, setSelectedTime] =
+    useState('');
   const [error, setError] =
     useState('');
 
@@ -73,8 +116,13 @@ export default function ClientDetailsPage() {
     const packagesData =
       await apiFetch('/packages');
 
+    const bookingsData = await apiFetch(
+      `/clients/${clientId}/bookings`
+    );
+
     setClient(clientData);
     setPackages(packagesData);
+    setBookings(bookingsData);
   }
 
   async function assignPackage(packageId: string) {
@@ -112,6 +160,47 @@ export default function ClientDetailsPage() {
     } catch (err: any) {
       alert(err.message);
     }
+  }
+
+  async function createBooking() {
+    if (!selectedDate || !selectedTime) {
+      alert('Select date and time');
+      return;
+    }
+
+    try {
+      setBookingLoading(true);
+
+      const isoDate =
+        `${selectedDate}T${selectedTime}:00`;
+
+      await apiFetch('/bookings', {
+        method: 'POST',
+        body: JSON.stringify({
+          clientId,
+          startAt: isoDate,
+        }),
+      });
+
+      setSelectedDate(defaultDate);
+      setSelectedTime('');
+
+      await loadClientData();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setBookingLoading(false);
+    }
+  }
+
+  function formatBookingDate(date: string) {
+    return new Intl.DateTimeFormat('sr-RS', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(date));
   }
 
   useEffect(() => {
@@ -293,6 +382,99 @@ export default function ClientDetailsPage() {
                   </div>
                 </div>
               )}
+            </Card>
+          </div>
+
+          <div className="mt-8 grid grid-cols-2 gap-6">
+            <Card className="p-6">
+              <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
+                <Calendar size={20} />
+                Book Training
+              </h2>
+
+              <div className="space-y-4">
+                <input
+                  type="date"
+                  lang="sr-RS"
+                  locale="sr"
+                  min={todayDate}
+                  value={selectedDate}
+                  onChange={(e) =>
+                    setSelectedDate(
+                      e.target.value
+                    )
+                  }
+                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                />
+
+                <select
+                  value={selectedTime}
+                  onChange={(e) =>
+                    setSelectedTime(
+                      e.target.value
+                    )
+                  }
+                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                >
+                  <option value="">
+                    Select time
+                  </option>
+
+                  {SLOT_OPTIONS.map((slot) => (
+                    <option
+                      key={slot}
+                      value={slot}
+                    >
+                      {slot}
+                    </option>
+                  ))}
+                </select>
+
+                <Button
+                  disabled={
+                    bookingLoading ||
+                    client.clientPackages.length ===
+                      0
+                  }
+                  onClick={createBooking}
+                  className="w-full"
+                >
+                  {bookingLoading
+                    ? 'Booking...'
+                    : 'Book Session'}
+                </Button>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <h2 className="mb-6 text-xl font-semibold">
+                Upcoming Sessions
+              </h2>
+
+              <div className="space-y-3">
+                {bookings.length === 0 ? (
+                  <p className="text-slate-400">
+                    No bookings yet
+                  </p>
+                ) : (
+                  bookings.map((booking) => (
+                    <div
+                      key={booking.id}
+                      className="rounded-xl border border-white/10 p-4"
+                    >
+                      <p className="font-semibold">
+                        {formatBookingDate(
+                          booking.startAt
+                        )}
+                      </p>
+
+                      <p className="mt-1 text-sm text-slate-400">
+                        {booking.status}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
             </Card>
           </div>
         </>

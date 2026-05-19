@@ -19,7 +19,9 @@ export class ClientsService {
     });
 
     if (existingUser) {
-      throw new BadRequestException('User already exists');
+      throw new BadRequestException(
+        'User already exists'
+      );
     }
 
     const temporaryPassword = 'welcome123';
@@ -68,24 +70,53 @@ export class ClientsService {
     });
   }
 
-async findOne(trainerId: string, clientId: string) {
-  return this.prisma.clientProfile.findFirst({
-    where: {
-      id: clientId,
-      trainerId,
-    },
-    include: {
-      user: true,
-      clientPackages: {
-        where: {
-          active: true,
-        },
-        include: {
-          package: true,
+  async findOne(trainerId: string, clientId: string) {
+    return this.prisma.clientProfile.findFirst({
+      where: {
+        id: clientId,
+        trainerId,
+      },
+      include: {
+        user: true,
+        clientPackages: {
+          where: {
+            active: true,
+          },
+          include: {
+            package: true,
+          },
         },
       },
-      bookings: true,
-    },
-  });
-}
+    });
+  }
+
+  async findBookings(
+    trainerId: string,
+    clientId: string
+  ) {
+    return this.prisma.booking.findMany({
+      where: {
+        clientId,
+        client: {
+          trainerId,
+        },
+        startAt: {
+          gt: new Date(),
+        },
+        status: {
+          in: ['CONFIRMED', 'RESCHEDULED'],
+        },
+      },
+      include: {
+        clientPackage: {
+          include: {
+            package: true,
+          },
+        },
+      },
+      orderBy: {
+        startAt: 'asc',
+      },
+    });
+  }
 }

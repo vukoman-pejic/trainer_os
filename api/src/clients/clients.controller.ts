@@ -27,12 +27,17 @@ export class ClientsController {
     @CurrentUser() user: any,
     @Body() dto: CreateClientDto
   ) {
-    return this.clientsService.create(user.userId, dto);
+    return this.clientsService.create(
+      user.userId,
+      dto
+    );
   }
 
   @Get()
   findAll(@CurrentUser() user: any) {
-    return this.clientsService.findAll(user.userId);
+    return this.clientsService.findAll(
+      user.userId
+    );
   }
 
   @Get(':id')
@@ -40,6 +45,20 @@ export class ClientsController {
     @CurrentUser() user: any,
     @Param('id') id: string
   ) {
-    return this.clientsService.findOne(user.userId, id);
+    return this.clientsService.findOne(
+      user.userId,
+      id
+    );
+  }
+
+  @Get(':id/bookings')
+  findBookings(
+    @CurrentUser() user: any,
+    @Param('id') id: string
+  ) {
+    return this.clientsService.findBookings(
+      user.userId,
+      id
+    );
   }
 }
