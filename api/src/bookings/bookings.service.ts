@@ -334,4 +334,120 @@ export class BookingsService {
       },
     });
   }
+
+  async assignWorkout(
+    bookingId: string,
+    trainerId: string,
+    workoutTemplateId?: string | null
+  ) {
+    const booking =
+      await this.prisma.booking.findFirst({
+        where: {
+          id: bookingId,
+          client: {
+            trainerId,
+          },
+        },
+        include: {
+          workoutTemplate: true,
+        },
+      });
+
+    if (!booking) {
+      throw new NotFoundException(
+        'Booking not found'
+      );
+    }
+
+    if (!workoutTemplateId) {
+      return this.prisma.booking.update({
+        where: {
+          id: bookingId,
+        },
+        data: {
+          workoutTemplateId: null,
+        },
+        include: {
+          workoutTemplate: true,
+        },
+      });
+    }
+
+    const workout =
+      await this.prisma.workoutTemplate.findFirst({
+        where: {
+          id: workoutTemplateId,
+          trainerId,
+        },
+      });
+
+    if (!workout) {
+      throw new NotFoundException(
+        'Workout not found'
+      );
+    }
+
+    const existingBookings =
+      await this.prisma.booking.findMany({
+        where: {
+          id: {
+            not: booking.id,
+          },
+          startAt: booking.startAt,
+          status: {
+            in: [
+              BookingStatus.CONFIRMED,
+              BookingStatus.RESCHEDULED,
+            ],
+          },
+        },
+        include: {
+          workoutTemplate: true,
+        },
+      });
+
+    const herculesCount =
+      existingBookings.filter(
+        (b) =>
+          b.workoutTemplate?.type ===
+          'HERCULES'
+      ).length;
+
+    const reformerCount =
+      existingBookings.filter(
+        (b) =>
+          b.workoutTemplate?.type ===
+          'REFORMER'
+      ).length;
+
+    if (
+      workout.type === 'HERCULES' &&
+      herculesCount >= 1
+    ) {
+      throw new BadRequestException(
+        'Only 1 Hercules workout allowed in this slot'
+      );
+    }
+
+    if (
+      workout.type === 'REFORMER' &&
+      reformerCount >= 4
+    ) {
+      throw new BadRequestException(
+        'Maximum 4 Reformer workouts allowed in this slot'
+      );
+    }
+
+    return this.prisma.booking.update({
+      where: {
+        id: bookingId,
+      },
+      data: {
+        workoutTemplateId,
+      },
+      include: {
+        workoutTemplate: true,
+      },
+    });
+  }
 }

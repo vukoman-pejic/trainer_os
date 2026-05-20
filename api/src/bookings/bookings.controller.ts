@@ -14,6 +14,8 @@ import { RolesGuard } from '../auth/roles.guard';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
+import { AssignWorkoutDto } from './dto/assign-workout.dto';
+import { CurrentUser } from '../auth/current-user.decorator';
 
 @Controller('bookings')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -41,6 +43,19 @@ export class BookingsController {
     return this.bookingsService.reschedule(
       id,
       dto.startAt
+    );
+  }
+
+  @Patch(':id/workout')
+  assignWorkout(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: AssignWorkoutDto
+  ) {
+    return this.bookingsService.assignWorkout(
+      id,
+      user.userId,
+      dto.workoutTemplateId
     );
   }
 

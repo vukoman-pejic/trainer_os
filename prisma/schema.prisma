@@ -44,6 +44,11 @@ enum NotificationType {
   REQUEST_APPROVED
 }
 
+enum WorkoutType {
+  HERCULES
+  REFORMER
+}
+
 model User {
   id                 String   @id @default(uuid())
   email              String   @unique
@@ -56,9 +61,10 @@ model User {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  clientProfile ClientProfile?
-  notifications Notification[]
-  clients       ClientProfile[] @relation("TrainerClients")
+  clientProfile     ClientProfile?
+  notifications     Notification[]
+  clients           ClientProfile[] @relation("TrainerClients")
+  workoutTemplates  WorkoutTemplate[]
 }
 
 model ClientProfile {
@@ -118,11 +124,26 @@ model TrainingRequest {
   booking Booking?
 }
 
+model WorkoutTemplate {
+  id        String      @id @default(uuid())
+  trainerId String
+  name      String
+  type      WorkoutType
+  content   String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  trainer User @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  bookings Booking[]
+}
+
 model Booking {
   id                 String        @id @default(uuid())
   clientId           String
   trainingRequestId  String?       @unique
   clientPackageId    String
+  workoutTemplateId  String?
   startAt            DateTime
   endAt              DateTime
   status             BookingStatus @default(CONFIRMED)
@@ -134,9 +155,10 @@ model Booking {
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
-  client          ClientProfile    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  trainingRequest TrainingRequest? @relation(fields: [trainingRequestId], references: [id])
-  clientPackage   ClientPackage    @relation(fields: [clientPackageId], references: [id])
+  client           ClientProfile     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  trainingRequest  TrainingRequest?  @relation(fields: [trainingRequestId], references: [id])
+  clientPackage    ClientPackage     @relation(fields: [clientPackageId], references: [id])
+  workoutTemplate  WorkoutTemplate?  @relation(fields: [workoutTemplateId], references: [id])
 
   workoutLog WorkoutLog?
 }

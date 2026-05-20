@@ -2,12 +2,16 @@
 
 import {
   Calendar,
+  Dumbbell,
   LayoutDashboard,
   LogOut,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import {
+  usePathname,
+  useRouter,
+} from 'next/navigation';
 import { Button } from '../ui/button';
 import { logout } from '../../lib/auth';
 
@@ -68,6 +72,16 @@ export function TrainerLayout({
           >
             <Calendar size={18} />
             Calendar
+          </Link>
+
+          <Link
+            href="/dashboard/workouts"
+            className={navClass(
+              '/dashboard/workouts'
+            )}
+          >
+            <Dumbbell size={18} />
+            Workouts
           </Link>
         </nav>
 

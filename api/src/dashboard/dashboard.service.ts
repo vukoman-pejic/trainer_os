@@ -60,6 +60,7 @@ export class DashboardService {
               user: true,
             },
           },
+          workoutTemplate: true,
         },
         orderBy: {
           startAt: 'asc',
@@ -88,6 +89,7 @@ export class DashboardService {
               user: true,
             },
           },
+          workoutTemplate: true,
         },
         orderBy: {
           startAt: 'asc',
@@ -174,6 +176,7 @@ export class DashboardService {
               user: true,
             },
           },
+          workoutTemplate: true,
         },
         orderBy: {
           startAt: 'asc',

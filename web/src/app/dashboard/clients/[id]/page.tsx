@@ -38,6 +38,8 @@ type ClientDetails = {
       sessionCount: number;
     };
   }[];
+  upcomingSessions: Booking[];
+  pastSessions: Booking[];
 };
 
 type PackageOption = {
@@ -51,6 +53,11 @@ type Booking = {
   startAt: string;
   endAt: string;
   status: string;
+  workoutTemplate?: {
+    id: string;
+    name: string;
+    type: 'HERCULES' | 'REFORMER';
+  } | null;
 };
 
 const SLOT_OPTIONS = [
@@ -89,9 +96,18 @@ export default function ClientDetailsPage() {
   const [packages, setPackages] = useState<
     PackageOption[]
   >([]);
-  const [bookings, setBookings] = useState<
-    Booking[]
-  >([]);
+  const [workouts, setWorkouts] =
+    useState<
+      {
+        id: string;
+        name: string;
+        type: 'HERCULES' | 'REFORMER';
+      }[]
+    >([]);
+  const [workoutSavingId, setWorkoutSavingId] =
+    useState<string | null>(null);
+  const [selectedWorkouts, setSelectedWorkouts] =
+    useState<Record<string, string>>({});
   const [loading, setLoading] =
     useState(true);
   const [assigning, setAssigning] =
@@ -123,13 +139,26 @@ export default function ClientDetailsPage() {
     const packagesData =
       await apiFetch('/packages');
 
-    const bookingsData = await apiFetch(
-      `/clients/${clientId}/bookings`
-    );
+    const workoutsData =
+      await apiFetch('/workouts');
 
     setClient(clientData);
     setPackages(packagesData);
-    setBookings(bookingsData);
+    setWorkouts(workoutsData);
+
+    const initialSelections: Record<
+      string,
+      string
+    > = {};
+
+    clientData.upcomingSessions.forEach(
+      (booking: any) => {
+        initialSelections[booking.id] =
+          booking.workoutTemplate?.id || '';
+      }
+    );
+
+    setSelectedWorkouts(initialSelections);
   }
 
   async function assignPackage(packageId: string) {
@@ -256,6 +285,33 @@ export default function ClientDetailsPage() {
       alert(err.message);
     } finally {
       setRescheduleLoading(false);
+    }
+  }
+
+  async function assignWorkout(
+    bookingId: string
+  ) {
+    try {
+      setWorkoutSavingId(bookingId);
+
+      await apiFetch(
+        `/bookings/${bookingId}/workout`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            workoutTemplateId:
+              selectedWorkouts[
+                bookingId
+              ] || null,
+          }),
+        }
+      );
+
+      await loadClientData();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setWorkoutSavingId(null);
     }
   }
 
@@ -516,12 +572,12 @@ export default function ClientDetailsPage() {
               </h2>
 
               <div className="space-y-3">
-                {bookings.length === 0 ? (
+                {client.upcomingSessions.length === 0 ? (
                   <p className="text-slate-400">
                     No bookings yet
                   </p>
                 ) : (
-                  bookings.map((booking) => (
+                  client.upcomingSessions.map((booking) => (
                     <div
                       key={booking.id}
                       className="rounded-xl border border-white/10 p-4"
@@ -531,6 +587,71 @@ export default function ClientDetailsPage() {
                           booking.startAt
                         )}
                       </p>
+                      {booking.workoutTemplate ? (
+                        <p className="mt-2 text-sm text-violet-300">
+                          {booking.workoutTemplate.name} (
+                          {booking.workoutTemplate.type})
+                        </p>
+                      ) : (
+                        <p className="mt-2 text-sm text-slate-500">
+                          No workout assigned
+                        </p>
+                      )}
+
+                      <div className="mt-4 space-y-3">
+                        <select
+                          value={
+                            selectedWorkouts[
+                              booking.id
+                            ] || ''
+                          }
+                          onChange={(e) =>
+                            setSelectedWorkouts(
+                              (
+                                prev
+                              ) => ({
+                                ...prev,
+                                [booking.id]:
+                                  e.target.value,
+                              })
+                            )
+                          }
+                          className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                        >
+                          <option value="">
+                            No workout
+                          </option>
+
+                          {workouts.map((workout) => (
+                            <option
+                              key={workout.id}
+                              value={workout.id}
+                            >
+                              {workout.name} (
+                              {workout.type})
+                            </option>
+                          ))}
+                        </select>
+
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          disabled={
+                            workoutSavingId ===
+                            booking.id
+                          }
+                          onClick={() =>
+                            assignWorkout(
+                              booking.id
+                            )
+                          }
+                        >
+                          {workoutSavingId ===
+                          booking.id
+                            ? 'Saving...'
+                            : 'Save Workout'}
+                        </Button>
+                      </div>
 
                       {rescheduleBookingId === booking.id ? (
                         <div className="mt-4 space-y-3">
@@ -624,6 +745,43 @@ export default function ClientDetailsPage() {
                             </Button>
                           </div>
                         </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+            <Card className="p-6">
+              <h2 className="mb-6 text-xl font-semibold">
+                Past Sessions
+              </h2>
+
+              <div className="space-y-3">
+                {client.pastSessions.length === 0 ? (
+                  <p className="text-slate-400">
+                    No completed sessions yet
+                  </p>
+                ) : (
+                  client.pastSessions.map((booking) => (
+                    <div
+                      key={booking.id}
+                      className="rounded-xl border border-white/10 p-4"
+                    >
+                      <p className="font-semibold">
+                        {formatBookingDate(
+                          booking.startAt
+                        )}
+                      </p>
+
+                      {booking.workoutTemplate ? (
+                        <p className="mt-2 text-sm text-violet-300">
+                          {booking.workoutTemplate.name} (
+                          {booking.workoutTemplate.type})
+                        </p>
+                      ) : (
+                        <p className="mt-2 text-sm text-slate-500">
+                          No workout assigned
+                        </p>
                       )}
                     </div>
                   ))

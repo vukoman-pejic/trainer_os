@@ -13,10 +13,18 @@ import { Button } from '../../../components/ui/button';
 import { apiFetch } from '../../../lib/api';
 import { useAuthGuard } from '../../../hooks/use-auth-guard';
 
+type Workout = {
+  id: string;
+  name: string;
+  type: 'HERCULES' | 'REFORMER';
+  content: string;
+};
+
 type Session = {
   id: string;
   startAt: string;
   status: string;
+  workoutTemplate?: Workout | null;
   client: {
     id: string;
     user: {
@@ -64,6 +72,12 @@ export default function CalendarPage() {
   const [calendar, setCalendar] =
     useState<CalendarData | null>(null);
 
+  const [workouts, setWorkouts] =
+    useState<Workout[]>([]);
+
+  const [selectedWorkoutId, setSelectedWorkoutId] =
+    useState('');
+
   const [loading, setLoading] =
     useState(true);
 
@@ -93,7 +107,12 @@ export default function CalendarPage() {
       `/dashboard/calendar?weekOffset=${weekOffset}`
     );
 
+    const workoutsData = await apiFetch(
+        '/workouts'
+    );
+
     setCalendar(data);
+    setWorkouts(workoutsData);
   }
 
   function formatHeaderDate(date: string) {
@@ -209,8 +228,37 @@ export default function CalendarPage() {
       );
 
       setSelectedBooking(null);
+      setSelectedWorkoutId('');
       setRescheduleDate('');
       setRescheduleTime('');
+
+      await loadCalendar();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function assignWorkout() {
+    if (!selectedBooking) return;
+
+    try {
+      setActionLoading(true);
+
+      await apiFetch(
+        `/bookings/${selectedBooking.id}/workout`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            workoutTemplateId:
+              selectedWorkoutId || null,
+          }),
+        }
+      );
+
+      setSelectedBooking(null);
+      setSelectedWorkoutId('');
 
       await loadCalendar();
     } catch (err: any) {
@@ -361,7 +409,7 @@ export default function CalendarPage() {
                                 const popupWidth =
                                   320;
                                 const popupHeight =
-                                  420;
+                                  700;
 
                                 let x =
                                   rect.right +
@@ -410,6 +458,10 @@ export default function CalendarPage() {
 
                                 setRescheduleTime('');
 
+                                setSelectedWorkoutId(
+                                  session.workoutTemplate?.id || ''
+                                );
+
                                 setSelectedBooking(
                                   session
                                 );
@@ -436,6 +488,11 @@ export default function CalendarPage() {
                                   session.status
                                 }
                               </p>
+                              {session.workoutTemplate && (
+                                <p className="mt-1 text-xs text-violet-300">
+                                  {session.workoutTemplate.name}
+                                </p>
+                              )}
                             </button>
                           )
                         )}
@@ -457,7 +514,7 @@ export default function CalendarPage() {
             top: popupPosition.y,
             zIndex: 99999,
           }}
-          className="w-80 rounded-2xl border border-white/10 bg-[#111118] p-5 shadow-2xl"
+          className="w-80 max-h-[85vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#111118] p-5 shadow-2xl"
         >
           <div className="mb-4 flex items-center justify-between">
             <div>
@@ -480,6 +537,7 @@ export default function CalendarPage() {
             <button
               onClick={() => {
                 setSelectedBooking(null);
+                setSelectedWorkoutId('');
                 setRescheduleDate('');
                 setRescheduleTime('');
               }}
@@ -503,6 +561,59 @@ export default function CalendarPage() {
               onClick={cancelBooking}
             >
               Cancel
+            </Button>
+          </div>
+
+          <div className="mb-5 space-y-3">
+            <p className="text-sm font-medium">
+              Workout
+            </p>
+
+            {selectedBooking.workoutTemplate ? (
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="font-semibold">
+                  {selectedBooking.workoutTemplate.name}
+                </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  {selectedBooking.workoutTemplate.type}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">
+                No workout assigned
+              </p>
+            )}
+
+            <select
+              value={selectedWorkoutId}
+              onChange={(e) =>
+                setSelectedWorkoutId(
+                  e.target.value
+                )
+              }
+              className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+            >
+              <option value="">
+                No workout
+              </option>
+
+              {workouts.map((workout) => (
+                <option
+                  key={workout.id}
+                  value={workout.id}
+                >
+                  {workout.name} - {workout.type}
+                </option>
+              ))}
+            </select>
+
+            <Button
+              className="w-full"
+              disabled={actionLoading}
+              onClick={assignWorkout}
+            >
+              Save Workout
             </Button>
           </div>
 
