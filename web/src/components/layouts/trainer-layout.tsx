@@ -4,7 +4,6 @@ import {
   Calendar,
   LayoutDashboard,
   LogOut,
-  Package,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -69,16 +68,6 @@ export function TrainerLayout({
           >
             <Calendar size={18} />
             Calendar
-          </Link>
-
-          <Link
-            href="/dashboard/packages"
-            className={navClass(
-              '/dashboard/packages'
-            )}
-          >
-            <Package size={18} />
-            Packages
           </Link>
         </nav>
 

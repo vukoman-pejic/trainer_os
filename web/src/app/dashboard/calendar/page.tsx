@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { TrainerLayout } from '../../../components/layouts/trainer-layout';
@@ -69,6 +70,24 @@ export default function CalendarPage() {
   const [weekOffset, setWeekOffset] =
     useState(0);
 
+  const [selectedBooking, setSelectedBooking] =
+    useState<Session | null>(null);
+
+  const [popupPosition, setPopupPosition] =
+    useState({
+      x: 0,
+      y: 0,
+    });
+
+  const [rescheduleDate, setRescheduleDate] =
+    useState('');
+
+  const [rescheduleTime, setRescheduleTime] =
+    useState('');
+
+  const [actionLoading, setActionLoading] =
+    useState(false);
+
   async function loadCalendar() {
     const data = await apiFetch(
       `/dashboard/calendar?weekOffset=${weekOffset}`
@@ -85,7 +104,7 @@ export default function CalendarPage() {
   }
 
   function getDayDate(index: number) {
-    if (!calendar) return '';
+    if (!calendar) return new Date();
 
     const date = new Date(calendar.weekStart);
     date.setDate(date.getDate() + index);
@@ -125,6 +144,80 @@ export default function CalendarPage() {
         );
       }
     );
+  }
+
+  function getNextDayFromBooking(
+    bookingDate: string
+  ) {
+    const nextDay = new Date(bookingDate);
+    nextDay.setDate(
+      nextDay.getDate() + 1
+    );
+
+    return nextDay
+      .toISOString()
+      .split('T')[0];
+  }
+
+  async function cancelBooking() {
+    if (!selectedBooking) return;
+
+    try {
+      setActionLoading(true);
+
+      await apiFetch(
+        `/bookings/${selectedBooking.id}/cancel`,
+        {
+          method: 'PATCH',
+        }
+      );
+
+      setSelectedBooking(null);
+      setRescheduleDate('');
+      setRescheduleTime('');
+
+      await loadCalendar();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function rescheduleBooking() {
+    if (
+      !selectedBooking ||
+      !rescheduleDate ||
+      !rescheduleTime
+    ) {
+      alert('Select date and time');
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+
+      await apiFetch(
+        `/bookings/${selectedBooking.id}/reschedule`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            startAt:
+              `${rescheduleDate}T${rescheduleTime}:00`,
+          }),
+        }
+      );
+
+      setSelectedBooking(null);
+      setRescheduleDate('');
+      setRescheduleTime('');
+
+      await loadCalendar();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setActionLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -225,10 +318,7 @@ export default function CalendarPage() {
               key={slot}
               className="contents"
             >
-              <Card
-                key={slot}
-                className="flex items-center justify-center p-4"
-              >
+              <Card className="flex items-center justify-center p-4">
                 <p className="font-semibold">
                   {slot}
                 </p>
@@ -250,35 +340,103 @@ export default function CalendarPage() {
                       <div className="space-y-2">
                         {sessions.map(
                           (session) => (
-                            <Link
+                            <button
                               key={
                                 session.id
                               }
-                              href={`/dashboard/clients/${session.client.id}`}
-                            >
-                              <div className="rounded-lg border border-white/10 bg-white/5 p-3 transition hover:bg-white/10">
-                                <p className="text-sm font-semibold">
-                                  {
-                                    session
-                                      .client
-                                      .user
-                                      .firstName
-                                  }{' '}
-                                  {
-                                    session
-                                      .client
-                                      .user
-                                      .lastName
-                                  }
-                                </p>
+                              onClick={(e) => {
+                                if (
+                                  selectedBooking?.id ===
+                                  session.id
+                                ) {
+                                  setSelectedBooking(
+                                    null
+                                  );
+                                  return;
+                                }
 
-                                <p className="mt-1 text-xs text-slate-400">
+                                const rect =
+                                  e.currentTarget.getBoundingClientRect();
+
+                                const popupWidth =
+                                  320;
+                                const popupHeight =
+                                  420;
+
+                                let x =
+                                  rect.right +
+                                  12;
+
+                                let y = rect.top;
+
+                                if (
+                                  x +
+                                    popupWidth >
+                                  window.innerWidth
+                                ) {
+                                  x =
+                                    rect.left -
+                                    popupWidth -
+                                    12;
+                                }
+
+                                if (
+                                  y +
+                                    popupHeight >
+                                  window.innerHeight
+                                ) {
+                                  y =
+                                    window.innerHeight -
+                                    popupHeight -
+                                    20;
+                                }
+
+                                if (y < 20) {
+                                  y = 20;
+                                }
+
+                                setPopupPosition(
                                   {
-                                    session.status
+                                    x,
+                                    y,
                                   }
-                                </p>
-                              </div>
-                            </Link>
+                                );
+
+                                setRescheduleDate(
+                                  getNextDayFromBooking(
+                                    session.startAt
+                                  )
+                                );
+
+                                setRescheduleTime('');
+
+                                setSelectedBooking(
+                                  session
+                                );
+                              }}
+                              className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-left transition hover:bg-white/10"
+                            >
+                              <p className="text-sm font-semibold">
+                                {
+                                  session
+                                    .client
+                                    .user
+                                    .firstName
+                                }{' '}
+                                {
+                                  session
+                                    .client
+                                    .user
+                                    .lastName
+                                }
+                              </p>
+
+                              <p className="mt-1 text-xs text-slate-400">
+                                {
+                                  session.status
+                                }
+                              </p>
+                            </button>
                           )
                         )}
                       </div>
@@ -290,6 +448,109 @@ export default function CalendarPage() {
           ))}
         </div>
       </div>
+
+      {selectedBooking && (
+        <div
+          style={{
+            position: 'fixed',
+            left: popupPosition.x,
+            top: popupPosition.y,
+            zIndex: 99999,
+          }}
+          className="w-80 rounded-2xl border border-white/10 bg-[#111118] p-5 shadow-2xl"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold">
+                {
+                  selectedBooking.client.user
+                    .firstName
+                }{' '}
+                {
+                  selectedBooking.client.user
+                    .lastName
+                }
+              </h3>
+
+              <p className="text-sm text-slate-400">
+                {selectedBooking.status}
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setSelectedBooking(null);
+                setRescheduleDate('');
+                setRescheduleTime('');
+              }}
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="mb-5 flex gap-2">
+            <Link
+              href={`/dashboard/clients/${selectedBooking.client.id}`}
+            >
+              <Button variant="outline">
+                Open Client
+              </Button>
+            </Link>
+
+            <Button
+              variant="destructive"
+              disabled={actionLoading}
+              onClick={cancelBooking}
+            >
+              Cancel
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            <input
+              type="date"
+              value={rescheduleDate}
+              onChange={(e) =>
+                setRescheduleDate(
+                  e.target.value
+                )
+              }
+              className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+            />
+
+            <select
+              value={rescheduleTime}
+              onChange={(e) =>
+                setRescheduleTime(
+                  e.target.value
+                )
+              }
+              className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+            >
+              <option value="">
+                Select time
+              </option>
+
+              {TIME_SLOTS.map((slot) => (
+                <option
+                  key={slot}
+                  value={slot}
+                >
+                  {slot}
+                </option>
+              ))}
+            </select>
+
+            <Button
+              className="w-full"
+              disabled={actionLoading}
+              onClick={rescheduleBooking}
+            >
+              Reschedule
+            </Button>
+          </div>
+        </div>
+      )}
     </TrainerLayout>
   );
 }
