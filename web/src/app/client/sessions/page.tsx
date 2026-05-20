@@ -1,11 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  Calendar,
-  Package,
-  Clock,
-} from 'lucide-react';
 import { ClientLayout } from '../../../components/layouts/client-layout';
 import { Card } from '../../../components/ui/card';
 import { apiFetch } from '../../../lib/api';
@@ -24,38 +19,30 @@ type Session = {
   workoutTemplate?: Workout | null;
 };
 
-type DashboardData = {
-  activePackage?: {
-    id: string;
-    remainingSessions: number;
-    package: {
-      name: string;
-      sessionCount: number;
-    };
-  } | null;
-
-  nextSession?: Session | null;
-
-  recentPastSessions: Session[];
+type SessionsResponse = {
+  upcomingSessions: Session[];
+  pastSessions: Session[];
 };
 
-export default function ClientDashboardPage() {
+export default function ClientSessionsPage() {
   const authorized = useAuthGuard({
     requiredRole: 'CLIENT',
   });
 
-  const [dashboard, setDashboard] =
-    useState<DashboardData | null>(null);
+  const [sessions, setSessions] =
+    useState<SessionsResponse | null>(
+      null
+    );
 
   const [loading, setLoading] =
     useState(true);
 
-  async function loadDashboard() {
+  async function loadSessions() {
     const data = await apiFetch(
-      '/client/dashboard'
+      '/client/sessions'
     );
 
-    setDashboard(data);
+    setSessions(data);
   }
 
   function formatDate(date: string) {
@@ -73,7 +60,7 @@ export default function ClientDashboardPage() {
 
     async function init() {
       try {
-        await loadDashboard();
+        await loadSessions();
       } finally {
         setLoading(false);
       }
@@ -86,11 +73,11 @@ export default function ClientDashboardPage() {
     return null;
   }
 
-  if (loading || !dashboard) {
+  if (loading || !sessions) {
     return (
       <ClientLayout>
         <Card className="p-8 text-slate-400">
-          Loading dashboard...
+          Loading sessions...
         </Card>
       </ClientLayout>
     );
@@ -100,86 +87,69 @@ export default function ClientDashboardPage() {
     <ClientLayout>
       <div className="mb-8">
         <h1 className="text-4xl font-bold">
-          Dashboard
+          My Sessions
         </h1>
 
         <p className="mt-2 text-slate-400">
-          Welcome back
+          Your upcoming and completed
+          training sessions
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        <Card className="p-6">
-          <Calendar size={24} />
-
-          <p className="mt-4 text-slate-400">
-            Next Session
-          </p>
-
-          {dashboard.nextSession ? (
-            <>
-              <p className="mt-2 text-lg font-semibold">
-                {formatDate(
-                  dashboard.nextSession.startAt
-                )}
-              </p>
-
-              <p className="mt-2 text-sm text-violet-300">
-                {dashboard.nextSession
-                  .workoutTemplate
-                  ? `${dashboard.nextSession.workoutTemplate.name} (${dashboard.nextSession.workoutTemplate.type})`
-                  : 'No workout assigned'}
-              </p>
-            </>
-          ) : (
-            <p className="mt-2 text-slate-500">
-              No upcoming sessions
-            </p>
-          )}
-        </Card>
-
-        <Card className="p-6">
-          <Package size={24} />
-
-          <p className="mt-4 text-slate-400">
-            Remaining Sessions
-          </p>
-
-          <p className="mt-2 text-3xl font-bold">
-            {dashboard.activePackage
-              ?.remainingSessions ?? 0}
-          </p>
-        </Card>
-
-        <Card className="p-6">
-          <Clock size={24} />
-
-          <p className="mt-4 text-slate-400">
-            Current Package
-          </p>
-
-          <p className="mt-2 text-lg font-semibold">
-            {dashboard.activePackage
-              ?.package.name ||
-              'No active package'}
-          </p>
-        </Card>
-      </div>
-
-      <div className="mt-8">
+      <div className="grid grid-cols-2 gap-6">
         <Card className="p-6">
           <h2 className="mb-6 text-xl font-semibold">
-            Recent Sessions
+            Upcoming Sessions
           </h2>
 
           <div className="space-y-3">
-            {dashboard.recentPastSessions
+            {sessions.upcomingSessions
               .length === 0 ? (
               <p className="text-slate-400">
-                No past sessions yet
+                No upcoming sessions
               </p>
             ) : (
-              dashboard.recentPastSessions.map(
+              sessions.upcomingSessions.map(
+                (session) => (
+                  <div
+                    key={session.id}
+                    className="rounded-xl border border-white/10 p-4"
+                  >
+                    <p className="font-semibold">
+                      {formatDate(
+                        session.startAt
+                      )}
+                    </p>
+
+                    <p className="mt-2 text-sm text-slate-400">
+                      {session.status}
+                    </p>
+
+                    <p className="mt-2 text-sm text-violet-300">
+                      {session.workoutTemplate
+                        ? `${session.workoutTemplate.name} (${session.workoutTemplate.type})`
+                        : 'No workout assigned'}
+                    </p>
+                  </div>
+                )
+              )
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <h2 className="mb-6 text-xl font-semibold">
+            Past Sessions
+          </h2>
+
+          <div className="space-y-3">
+            {sessions.pastSessions
+              .length === 0 ? (
+              <p className="text-slate-400">
+                No past sessions
+              </p>
+            ) : (
+              sessions.pastSessions.map(
                 (session) => (
                   <div
                     key={session.id}

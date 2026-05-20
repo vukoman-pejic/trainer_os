@@ -7,6 +7,7 @@ import { PackagesModule } from '../packages/packages.module';
 import { BookingsModule } from '../bookings/bookings.module';
 import { DashboardModule } from '../dashboard/dashboard.module';
 import { WorkoutsModule } from '../workouts/workouts.module';
+import { ClientModule } from '../client/client.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { WorkoutsModule } from '../workouts/workouts.module';
       PackagesModule,
       BookingsModule,
       DashboardModule,
-      WorkoutsModule
+      WorkoutsModule,
+      ClientModule
   ],
   controllers: [],
   providers: [],
