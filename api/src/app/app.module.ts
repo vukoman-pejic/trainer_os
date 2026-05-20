@@ -5,6 +5,7 @@ import { UsersModule } from '../users/users.module';
 import { ClientsModule } from '../clients/clients.module';
 import { PackagesModule } from '../packages/packages.module';
 import { BookingsModule } from '../bookings/bookings.module';
+import { DashboardModule } from '../dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { BookingsModule } from '../bookings/bookings.module';
       UsersModule,
       ClientsModule,
       PackagesModule,
-      BookingsModule
+      BookingsModule,
+      DashboardModule
   ],
   controllers: [],
   providers: [],
