@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
@@ -22,6 +23,17 @@ export class DashboardController {
   trainerDashboard(@CurrentUser() user: any) {
     return this.dashboardService.getTrainerDashboard(
       user.userId
+    );
+  }
+
+  @Get('calendar')
+  calendar(
+    @CurrentUser() user: any,
+    @Query('weekOffset') weekOffset?: string
+  ) {
+    return this.dashboardService.getCalendar(
+      user.userId,
+      Number(weekOffset || 0)
     );
   }
 }

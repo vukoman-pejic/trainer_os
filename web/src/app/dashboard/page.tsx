@@ -105,9 +105,11 @@ export default function DashboardPage() {
             <Button>+ New Client</Button>
           </Link>
 
-          <Button variant="outline">
-            Full Calendar
-          </Button>
+          <Link href="/dashboard/calendar">
+            <Button variant="outline">
+              Full Calendar
+            </Button>
+          </Link>
         </div>
       </div>
 

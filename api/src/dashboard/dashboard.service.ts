@@ -126,4 +126,64 @@ export class DashboardService {
       upcomingThisWeek,
     };
   }
+
+  async getCalendar(
+    trainerId: string,
+    weekOffset = 0
+  ) {
+    const today = new Date();
+
+    const currentDay = today.getDay();
+    const mondayOffset =
+      currentDay === 0 ? -6 : 1 - currentDay;
+
+    const weekStart = new Date(today);
+    weekStart.setDate(
+      today.getDate() +
+        mondayOffset +
+        weekOffset * 7
+    );
+    weekStart.setHours(0, 0, 0, 0);
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(
+      weekStart.getDate() + 6
+    );
+    weekEnd.setHours(23, 59, 59, 999);
+
+    const sessions =
+      await this.prisma.booking.findMany({
+        where: {
+          client: {
+            trainerId,
+          },
+          status: {
+            in: [
+              BookingStatus.CONFIRMED,
+              BookingStatus.RESCHEDULED,
+            ],
+          },
+          startAt: {
+            gte: weekStart,
+            lte: weekEnd,
+          },
+        },
+        include: {
+          client: {
+            include: {
+              user: true,
+            },
+          },
+        },
+        orderBy: {
+          startAt: 'asc',
+        },
+      });
+
+    return {
+      weekStart,
+      weekEnd,
+      sessions,
+    };
+  }
 }
