@@ -197,6 +197,7 @@ export class DashboardService {
               user: true,
             },
           },
+          clientPackage: true,
           workoutTemplate: true,
         },
         orderBy: {

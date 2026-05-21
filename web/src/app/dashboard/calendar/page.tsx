@@ -25,6 +25,9 @@ type Session = {
   startAt: string;
   status: string;
   workoutTemplate?: Workout | null;
+  clientPackage: {
+    paymentStatus: 'PAID' | 'PENDING' | 'FAILED';
+  };
   client: {
     id: string;
     user: {
@@ -465,7 +468,12 @@ export default function CalendarPage() {
                                   session
                                 );
                               }}
-                              className="w-full rounded-lg border border-white/10 bg-white/5 p-3 text-left transition hover:bg-white/10"
+                              className={`w-full rounded-lg border-l-4 p-3 text-left transition hover:bg-white/10 ${
+                                session.clientPackage.paymentStatus ===
+                                'PAID'
+                                  ? 'border-l-emerald-500 border-white/10 bg-emerald-500/10'
+                                  : 'border-l-red-500 border-white/10 bg-red-500/10'
+                              }`}
                             >
                               <p className="text-sm font-semibold">
                                 {
@@ -482,11 +490,22 @@ export default function CalendarPage() {
                                 }
                               </p>
 
-                              <p className="mt-1 text-xs text-slate-400">
-                                {
-                                  session.status
-                                }
-                              </p>
+                              <div className="mt-1 space-y-1">
+
+                                <span
+                                  className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                    session.clientPackage.paymentStatus ===
+                                    'PAID'
+                                      ? 'bg-emerald-500/20 text-emerald-300'
+                                      : 'bg-red-500/20 text-red-300'
+                                  }`}
+                                >
+                                  {session.clientPackage.paymentStatus ===
+                                  'PAID'
+                                    ? 'PAID'
+                                    : 'UNPAID'}
+                                </span>
+                              </div>
                               {session.workoutTemplate && (
                                 <p className="mt-1 text-xs text-violet-300">
                                   {session.workoutTemplate.name}
