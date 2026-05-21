@@ -251,4 +251,55 @@ export class DashboardService {
       },
     });
   }
+
+  async getCancelledSessions(
+    trainerId: string,
+    page = 1
+  ) {
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const [sessions, total] =
+      await Promise.all([
+        this.prisma.booking.findMany({
+          where: {
+            client: {
+              trainerId,
+            },
+            status: BookingStatus.CANCELLED,
+          },
+          include: {
+            client: {
+              include: {
+                user: true,
+              },
+            },
+            workoutTemplate: true,
+          },
+          orderBy: {
+            cancelledAt: 'desc',
+          },
+          take: limit,
+          skip,
+        }),
+
+        this.prisma.booking.count({
+          where: {
+            client: {
+              trainerId,
+            },
+            status: BookingStatus.CANCELLED,
+          },
+        }),
+      ]);
+
+    return {
+      sessions,
+      total,
+      page,
+      totalPages: Math.ceil(
+        total / limit
+      ),
+    };
+  }
 }

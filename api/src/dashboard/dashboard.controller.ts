@@ -39,6 +39,17 @@ export class DashboardController {
     );
   }
 
+  @Get('cancelled-sessions')
+  getCancelledSessions(
+    @CurrentUser() user: any,
+    @Query('page') page?: string
+  ) {
+    return this.dashboardService.getCancelledSessions(
+      user.userId,
+      Number(page || 1)
+    );
+  }
+
   @Get('notifications')
   getNotifications(
     @CurrentUser() user: any

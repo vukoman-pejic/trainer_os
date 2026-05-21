@@ -7,6 +7,7 @@ import {
   LogOut,
   Users,
   Bell,
+  History
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -154,6 +155,16 @@ export function TrainerLayout({
           >
             <Calendar size={18} />
             Calendar
+          </Link>
+
+          <Link
+            href="/dashboard/cancelled-sessions"
+            className={navClass(
+              '/dashboard/cancelled-sessions'
+            )}
+          >
+            <History size={18} />
+            Cancelled Sessions
           </Link>
 
           <Link
