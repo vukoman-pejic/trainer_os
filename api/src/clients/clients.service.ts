@@ -206,4 +206,36 @@ export class ClientsService {
       },
     });
   }
+
+  async remove(
+    trainerId: string,
+    clientId: string
+  ) {
+    const client =
+      await this.prisma.clientProfile.findFirst({
+        where: {
+          id: clientId,
+          trainerId,
+        },
+        include: {
+          user: true,
+        },
+      });
+
+    if (!client) {
+      throw new BadRequestException(
+        'Client not found'
+      );
+    }
+
+    await this.prisma.user.delete({
+      where: {
+        id: client.user.id,
+      },
+    });
+
+    return {
+      success: true,
+    };
+  }
 }

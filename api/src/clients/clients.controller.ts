@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Delete,
   Param,
   Post,
   UseGuards,
@@ -57,6 +58,17 @@ export class ClientsController {
     @Param('id') id: string
   ) {
     return this.clientsService.findBookings(
+      user.userId,
+      id
+    );
+  }
+
+  @Delete(':id')
+  remove(
+    @CurrentUser() user: any,
+    @Param('id') id: string
+  ) {
+    return this.clientsService.remove(
       user.userId,
       id
     );

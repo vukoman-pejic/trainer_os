@@ -21,21 +21,32 @@ async function main() {
     },
   });
 
+  await prisma.booking.deleteMany();
+  await prisma.clientPackage.deleteMany();
+  await prisma.package.deleteMany();
+
   const packages = [
-    { name: '8 Sessions', sessionCount: 8 },
-    { name: '12 Sessions', sessionCount: 12 },
-    { name: '16 Sessions', sessionCount: 16 },
+    {
+      name: '8 Group',
+      sessionCount: 8,
+    },
+    {
+      name: '12 Group',
+      sessionCount: 12,
+    },
+    {
+      name: '8 Individual',
+      sessionCount: 8,
+    },
+    {
+      name: '12 Individual',
+      sessionCount: 12,
+    },
   ];
 
-  for (const pkg of packages) {
-    await prisma.package.upsert({
-      where: {
-        name: pkg.name,
-      },
-      update: {},
-      create: pkg,
-    });
-  }
+  await prisma.package.createMany({
+    data: packages,
+  });
 
   console.log('Seed complete');
   console.log('Trainer:', trainer.email);

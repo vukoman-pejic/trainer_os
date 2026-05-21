@@ -10,6 +10,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { TrainerLayout } from '../../../../components/layouts/trainer-layout';
 import { Card } from '../../../../components/ui/card';
 import { apiFetch } from '../../../../lib/api';
@@ -79,6 +80,8 @@ export default function ClientDetailsPage() {
     requiredRole: 'TRAINER',
   });
 
+  const router = useRouter();
+
   const params = useParams();
   const clientId = params.id as string;
 
@@ -106,11 +109,19 @@ export default function ClientDetailsPage() {
     >([]);
   const [workoutSavingId, setWorkoutSavingId] =
     useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] =
+    useState(false);
+  const [deletingClient, setDeletingClient] =
+    useState(false);
   const [selectedWorkouts, setSelectedWorkouts] =
     useState<Record<string, string>>({});
   const [loading, setLoading] =
     useState(true);
   const [assigning, setAssigning] =
+    useState(false);
+  const [selectedPackage, setSelectedPackage] =
+    useState<PackageOption | null>(null);
+  const [showAssignConfirm, setShowAssignConfirm] =
     useState(false);
   const [bookingLoading, setBookingLoading] =
     useState(false);
@@ -161,16 +172,21 @@ export default function ClientDetailsPage() {
     setSelectedWorkouts(initialSelections);
   }
 
-  async function assignPackage(packageId: string) {
+  async function assignPackage() {
+    if (!selectedPackage) return;
+
     try {
       setAssigning(true);
 
       await apiFetch(`/clients/${clientId}/packages`, {
         method: 'POST',
         body: JSON.stringify({
-          packageId,
+          packageId: selectedPackage.id,
         }),
       });
+
+      setShowAssignConfirm(false);
+      setSelectedPackage(null);
 
       await loadClientData();
     } catch (err: any) {
@@ -315,6 +331,25 @@ export default function ClientDetailsPage() {
     }
   }
 
+  async function deleteClient() {
+    try {
+      setDeletingClient(true);
+
+      await apiFetch(
+        `/clients/${clientId}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      router.push('/dashboard/clients');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setDeletingClient(false);
+    }
+  }
+
   function formatBookingDate(date: string) {
     return new Intl.DateTimeFormat('sr-RS', {
       day: '2-digit',
@@ -361,15 +396,26 @@ export default function ClientDetailsPage() {
 
       {client && (
         <>
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold">
-              {client.user.firstName}{' '}
-              {client.user.lastName}
-            </h1>
+          <div className="mb-8 flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-bold">
+                {client.user.firstName}{' '}
+                {client.user.lastName}
+              </h1>
 
-            <p className="mt-2 text-slate-400">
-              Client profile overview
-            </p>
+              <p className="mt-2 text-slate-400">
+                Client details and session overview
+              </p>
+            </div>
+
+            <Button
+              variant="destructive"
+              onClick={() =>
+                setShowDeleteConfirm(true)
+              }
+            >
+              Delete Client
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
@@ -494,9 +540,10 @@ export default function ClientDetailsPage() {
                       <Button
                         key={pkg.id}
                         disabled={assigning}
-                        onClick={() =>
-                          assignPackage(pkg.id)
-                        }
+                        onClick={() => {
+                          setSelectedPackage(pkg);
+                          setShowAssignConfirm(true);
+                        }}
                       >
                         {pkg.name}
                       </Button>
@@ -791,6 +838,93 @@ export default function ClientDetailsPage() {
           </div>
         </>
       )}
+    {showDeleteConfirm && (
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70">
+        <Card className="w-full max-w-md p-6">
+          <h2 className="text-xl font-semibold">
+            Delete Client
+          </h2>
+
+          <p className="mt-4 text-slate-400">
+            This will permanently remove the
+            client, bookings, packages and
+            history.
+          </p>
+
+          <div className="mt-6 flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() =>
+                setShowDeleteConfirm(false)
+              }
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="destructive"
+              className="flex-1"
+              disabled={deletingClient}
+              onClick={deleteClient}
+            >
+              {deletingClient
+                ? 'Deleting...'
+                : 'Delete Client'}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    )}
+    {showAssignConfirm && selectedPackage && (
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70">
+        <Card className="w-full max-w-md p-6">
+          <h2 className="text-xl font-semibold">
+            Assign Package
+          </h2>
+
+          <div className="mt-5 space-y-3 text-slate-300">
+            <p>
+              <span className="text-slate-400">
+                Client:
+              </span>{' '}
+              {client.user.firstName}{' '}
+              {client.user.lastName}
+            </p>
+
+            <p>
+              <span className="text-slate-400">
+                Package:
+              </span>{' '}
+              {selectedPackage.name}
+            </p>
+          </div>
+
+          <div className="mt-6 flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setShowAssignConfirm(false);
+                setSelectedPackage(null);
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              className="flex-1"
+              disabled={assigning}
+              onClick={assignPackage}
+            >
+              {assigning
+                ? 'Assigning...'
+                : 'Confirm Assignment'}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    )}
     </TrainerLayout>
   );
 }
