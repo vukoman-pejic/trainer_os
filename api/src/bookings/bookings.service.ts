@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ActorType, BookingStatus } from '@prisma/client';
+import { ActorType, BookingStatus, NotificationType, Prisma, } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 
@@ -199,6 +199,11 @@ export class BookingsService {
         },
         include: {
           clientPackage: true,
+          client: {
+            include: {
+              user: true,
+            },
+          },
         },
       });
 
@@ -245,6 +250,14 @@ export class BookingsService {
         });
       }
 
+      await this.notifyClient(
+        tx,
+        booking.client.userId,
+        NotificationType.TRAINER_CANCELLED,
+        'Session Cancelled',
+        `Your trainer cancelled your session scheduled for ${booking.startAt.toLocaleString()}`
+      );
+
       return tx.booking.update({
         where: {
           id: bookingId,
@@ -267,6 +280,13 @@ export class BookingsService {
         where: {
           id: bookingId,
         },
+        include: {
+          client: {
+            include: {
+              user: true,
+            },
+          },
+        },
       });
 
     if (!booking) {
@@ -274,6 +294,8 @@ export class BookingsService {
         'Booking not found'
       );
     }
+
+    const oldStartAt = booking.startAt;
 
     if (
       booking.status ===
@@ -303,16 +325,28 @@ export class BookingsService {
       booking.id
     );
 
-    return this.prisma.booking.update({
-      where: {
-        id: bookingId,
-      },
-      data: {
-        startAt,
-        endAt,
-        status: BookingStatus.RESCHEDULED,
-      },
-    });
+    return this.prisma.$transaction(
+      async (tx) => {
+        await this.notifyClient(
+          tx,
+          booking.client.userId,
+          NotificationType.TRAINER_RESCHEDULED,
+          'Session Rescheduled',
+          `Your trainer moved your session from ${oldStartAt.toLocaleString()} to ${startAt.toLocaleString()}`
+        );
+
+        return tx.booking.update({
+          where: {
+            id: bookingId,
+          },
+          data: {
+            startAt,
+            endAt,
+            status: BookingStatus.RESCHEDULED,
+          },
+        });
+      }
+    );
   }
 
   async findAll() {
@@ -447,6 +481,23 @@ export class BookingsService {
       },
       include: {
         workoutTemplate: true,
+      },
+    });
+  }
+
+  private async notifyClient(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    type: NotificationType,
+    title: string,
+    message: string
+  ) {
+    await tx.notification.create({
+      data: {
+        userId,
+        type,
+        title,
+        message,
       },
     });
   }
