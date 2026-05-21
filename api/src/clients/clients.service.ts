@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
@@ -239,6 +240,66 @@ export class ClientsService {
 
     return {
       success: true,
+    };
+  }
+
+  private generateTempPassword() {
+    const chars =
+      'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$';
+
+    let password = '';
+
+    for (let i = 0; i < 10; i++) {
+      password +=
+        chars[
+          Math.floor(
+            Math.random() * chars.length
+          )
+        ];
+    }
+
+    return password;
+  }
+
+  async resetPassword(
+    trainerId: string,
+    clientId: string
+  ) {
+    const client =
+      await this.prisma.clientProfile.findFirst({
+        where: {
+          id: clientId,
+          trainerId,
+        },
+        include: {
+          user: true,
+        },
+      });
+
+    if (!client) {
+      throw new NotFoundException(
+        'Client not found'
+      );
+    }
+
+    const tempPassword =
+      this.generateTempPassword();
+
+    const passwordHash =
+      await bcrypt.hash(tempPassword, 10);
+
+    await this.prisma.user.update({
+      where: {
+        id: client.user.id,
+      },
+      data: {
+        passwordHash,
+        mustChangePassword: true,
+      },
+    });
+
+    return {
+      tempPassword,
     };
   }
 }

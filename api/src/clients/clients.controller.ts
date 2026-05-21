@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   UseGuards,
+  Patch
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -69,6 +70,17 @@ export class ClientsController {
     @Param('id') id: string
   ) {
     return this.clientsService.remove(
+      user.userId,
+      id
+    );
+  }
+
+  @Patch(':id/reset-password')
+  resetClientPassword(
+    @CurrentUser() user: any,
+    @Param('id') id: string
+  ) {
+    return this.clientsService.resetPassword(
       user.userId,
       id
     );

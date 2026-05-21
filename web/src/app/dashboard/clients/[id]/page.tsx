@@ -112,6 +112,8 @@ export default function ClientDetailsPage() {
     useState(false);
   const [deletingClient, setDeletingClient] =
     useState(false);
+  const [resettingPassword, setResettingPassword] =
+    useState(false);
   const [selectedWorkouts, setSelectedWorkouts] =
     useState<Record<string, string>>({});
   const [loading, setLoading] =
@@ -330,6 +332,27 @@ export default function ClientDetailsPage() {
     }
   }
 
+  async function resetClientPassword() {
+    try {
+      setResettingPassword(true);
+
+      const data = await apiFetch(
+        `/clients/${clientId}/reset-password`,
+        {
+          method: 'PATCH',
+        }
+      );
+
+      alert(
+        `Temporary password: ${data.tempPassword}`
+      );
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setResettingPassword(false);
+    }
+  }
+
   async function deleteClient() {
     try {
       setDeletingClient(true);
@@ -407,14 +430,26 @@ export default function ClientDetailsPage() {
               </p>
             </div>
 
-            <Button
-              variant="destructive"
-              onClick={() =>
-                setShowDeleteConfirm(true)
-              }
-            >
-              Delete Client
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                disabled={resettingPassword}
+                onClick={resetClientPassword}
+              >
+                {resettingPassword
+                  ? 'Resetting...'
+                  : 'Reset Password'}
+              </Button>
+
+              <Button
+                variant="destructive"
+                onClick={() =>
+                  setShowDeleteConfirm(true)
+                }
+              >
+                Delete Client
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
