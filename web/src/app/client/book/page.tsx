@@ -1,0 +1,470 @@
+'use client';
+
+import {
+  useEffect,
+  useState,
+} from 'react';
+import { ClientLayout } from '../../../components/layouts/client-layout';
+import { Card } from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { apiFetch } from '../../../lib/api';
+import { useAuthGuard } from '../../../hooks/use-auth-guard';
+
+type Slot = {
+  startAt: string;
+  time: string;
+  capacity: number;
+  bookedCount: number;
+  availableCount: number;
+  isFull: boolean;
+  bookedByClient: boolean;
+  clientBookingId: string | null;
+  isBookable: boolean;
+};
+
+type Day = {
+  date: string;
+  slots: Slot[];
+};
+
+type AvailabilityResponse = {
+  weekStart: string;
+  weekEnd: string;
+  maxBookingsPerWeek: number;
+  clientBookingsThisWeek: number;
+  days: Day[];
+};
+
+type PopupMode =
+  | 'book'
+  | 'manage'
+  | 'reschedule';
+
+export default function ClientBookPage() {
+  const authorized = useAuthGuard({
+    requiredRole: 'CLIENT',
+  });
+
+  const [availability, setAvailability] =
+    useState<AvailabilityResponse | null>(
+      null
+    );
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [selectedSlot, setSelectedSlot] =
+    useState<Slot | null>(null);
+
+  const [processing, setProcessing] =
+    useState(false);
+
+  const [activeTab, setActiveTab] =
+    useState<'current' | 'next'>(
+      'next'
+    );
+
+  const [popupMode, setPopupMode] =
+    useState<PopupMode>('book');
+
+  async function loadAvailability() {
+    const data = await apiFetch(
+      '/client/availability'
+    );
+
+    setAvailability(data);
+  }
+
+  async function confirmBooking() {
+    if (!selectedSlot) return;
+
+    try {
+      setProcessing(true);
+
+      await apiFetch('/client/book', {
+        method: 'POST',
+        body: JSON.stringify({
+          startAt: selectedSlot.startAt,
+        }),
+      });
+
+      closePopup();
+      await loadAvailability();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function cancelBooking() {
+    if (!selectedSlot?.clientBookingId)
+      return;
+
+    try {
+      setProcessing(true);
+
+      await apiFetch(
+        `/client/bookings/${selectedSlot.clientBookingId}/cancel`,
+        {
+          method: 'PATCH',
+        }
+      );
+
+      closePopup();
+      await loadAvailability();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function rescheduleBooking(
+    newSlot: Slot
+  ) {
+    if (!selectedSlot?.clientBookingId)
+      return;
+
+    try {
+      setProcessing(true);
+
+      await apiFetch(
+        `/client/bookings/${selectedSlot.clientBookingId}/reschedule`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify({
+            startAt: newSlot.startAt,
+          }),
+        }
+      );
+
+      closePopup();
+      await loadAvailability();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  function closePopup() {
+    setSelectedSlot(null);
+    setPopupMode('book');
+  }
+
+  function handleSlotClick(slot: Slot) {
+    if (slot.bookedByClient) {
+      setSelectedSlot(slot);
+      setPopupMode('manage');
+      return;
+    }
+
+    if (
+      slot.isBookable &&
+      !slot.isFull
+    ) {
+      setSelectedSlot(slot);
+      setPopupMode('book');
+    }
+  }
+
+  function formatDay(date: string) {
+    return new Intl.DateTimeFormat('sr-RS', {
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit',
+    }).format(new Date(date));
+  }
+
+  useEffect(() => {
+    if (!authorized) return;
+
+    async function init() {
+      try {
+        await loadAvailability();
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    init();
+  }, [authorized]);
+
+  if (!authorized) {
+    return null;
+  }
+
+  if (loading || !availability) {
+    return (
+      <ClientLayout>
+        <Card className="p-8">
+          Loading availability...
+        </Card>
+      </ClientLayout>
+    );
+  }
+
+  const currentWeek =
+    availability.days.slice(0, 7);
+
+  const nextWeek =
+    availability.days.slice(7, 14);
+
+  const visibleDays =
+    activeTab === 'current'
+      ? currentWeek
+      : nextWeek;
+
+  return (
+    <ClientLayout>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold">
+          Calendar
+        </h1>
+
+        <p className="mt-2 text-slate-400">
+          Bookings are available only for
+          next week. Existing bookings can
+          be managed anytime.
+        </p>
+
+        <p className="text-slate-400">
+          Booked next week:{' '}
+          {
+            availability.clientBookingsThisWeek
+          }
+          /3
+        </p>
+      </div>
+
+      <div className="mb-6 flex gap-3">
+        <button
+          onClick={() =>
+            setActiveTab('current')
+          }
+          className={`rounded-xl px-5 py-3 transition ${
+            activeTab === 'current'
+              ? 'bg-white/10 text-white'
+              : 'bg-black/20 text-slate-400 hover:bg-white/5'
+          }`}
+        >
+          Current Week
+        </button>
+
+        <button
+          onClick={() =>
+            setActiveTab('next')
+          }
+          className={`rounded-xl px-5 py-3 transition ${
+            activeTab === 'next'
+              ? 'bg-white/10 text-white'
+              : 'bg-black/20 text-slate-400 hover:bg-white/5'
+          }`}
+        >
+          Next Week
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <div className="grid grid-cols-7 gap-4">
+          {visibleDays.map((day) => (
+            <Card
+              key={day.date}
+              className="p-4"
+            >
+              <h2 className="mb-4 text-center font-semibold">
+                {formatDay(day.date)}
+              </h2>
+
+              <div className="space-y-3">
+                {day.slots.map((slot) => (
+                  <button
+                    key={slot.startAt}
+                    onClick={() =>
+                      handleSlotClick(slot)
+                    }
+                    className={`w-full rounded-xl border p-3 text-left transition ${
+                      slot.bookedByClient
+                        ? 'border-violet-500 bg-violet-500/20'
+                        : !slot.isBookable
+                        ? 'border-white/10 bg-black/10 opacity-40'
+                        : slot.isFull
+                        ? 'border-red-500/20 bg-red-500/10 opacity-60'
+                        : 'border-white/10 bg-black/20 hover:bg-white/5'
+                    }`}
+                  >
+                    <p className="font-semibold">
+                      {slot.time}
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      {slot.bookedByClient
+                        ? 'Your booking'
+                        : !slot.isBookable
+                        ? 'Current week'
+                        : slot.isFull
+                        ? 'Full'
+                        : `${slot.availableCount} spots left`}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {selectedSlot &&
+        popupMode === 'book' && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70">
+            <Card className="w-full max-w-md p-6">
+              <h2 className="text-xl font-semibold">
+                Confirm Booking
+              </h2>
+
+              <p className="mt-4 text-slate-400">
+                Reserve session at{' '}
+                {selectedSlot.time}?
+              </p>
+
+              <div className="mt-6 flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={closePopup}
+                >
+                  Close
+                </Button>
+
+                <Button
+                  className="flex-1"
+                  disabled={processing}
+                  onClick={confirmBooking}
+                >
+                  {processing
+                    ? 'Booking...'
+                    : 'Confirm'}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+      {selectedSlot &&
+        popupMode === 'manage' && (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70">
+            <Card className="w-full max-w-md p-6">
+              <h2 className="text-xl font-semibold">
+                Manage Session
+              </h2>
+
+              <p className="mt-4 text-slate-400">
+                Your booking at{' '}
+                {selectedSlot.time}
+              </p>
+
+              <div className="mt-6 flex flex-col gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setPopupMode(
+                      'reschedule'
+                    )
+                  }
+                >
+                  Reschedule
+                </Button>
+
+                <Button
+                  variant="destructive"
+                  disabled={processing}
+                  onClick={cancelBooking}
+                >
+                  {processing
+                    ? 'Cancelling...'
+                    : 'Cancel Booking'}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  onClick={closePopup}
+                >
+                  Close
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+      {selectedSlot &&
+        popupMode === 'reschedule' && (
+          <div className="fixed inset-0 z-[99999] overflow-auto bg-black/80 p-8">
+            <div className="mx-auto max-w-7xl">
+              <Card className="p-6">
+                <h2 className="mb-6 text-2xl font-semibold">
+                  Select New Slot
+                </h2>
+
+                <div className="grid grid-cols-7 gap-4">
+                  {visibleDays.map((day) => (
+                    <Card
+                      key={day.date}
+                      className="p-4"
+                    >
+                      <h3 className="mb-4 text-center font-semibold">
+                        {formatDay(day.date)}
+                      </h3>
+
+                      <div className="space-y-3">
+                        {day.slots.map(
+                          (slot) => (
+                            <button
+                              key={
+                                slot.startAt
+                              }
+                              disabled={
+                                slot.isFull ||
+                                slot.bookedByClient
+                              }
+                              onClick={() =>
+                                rescheduleBooking(
+                                  slot
+                                )
+                              }
+                              className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-left transition hover:bg-white/5 disabled:opacity-40"
+                            >
+                              <p className="font-semibold">
+                                {
+                                  slot.time
+                                }
+                              </p>
+
+                              <p className="mt-1 text-xs text-slate-400">
+                                {
+                                  slot.availableCount
+                                }{' '}
+                                spots
+                              </p>
+                            </button>
+                          )
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                <Button
+                  variant="ghost"
+                  className="mt-6"
+                  onClick={closePopup}
+                >
+                  Close
+                </Button>
+              </Card>
+            </div>
+          </div>
+        )}
+    </ClientLayout>
+  );
+}

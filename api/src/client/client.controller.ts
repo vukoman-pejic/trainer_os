@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   Patch,
+  Post,
+  Param,
   UseGuards,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
@@ -11,6 +13,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { ClientService } from './client.service';
+import { BookSessionDto } from './dto/book-session.dto';
+import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 
 @Controller('client')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -49,6 +53,48 @@ export class ClientController {
     return this.clientService.updateProfile(
       user.userId,
       body
+    );
+  }
+
+  @Get('availability')
+  availability(@CurrentUser() user: any) {
+    return this.clientService.getAvailability(
+      user.userId
+    );
+  }
+
+  @Post('book')
+  book(
+    @CurrentUser() user: any,
+    @Body() dto: BookSessionDto
+  ) {
+    return this.clientService.bookSession(
+      user.userId,
+      dto.startAt
+    );
+  }
+
+  @Patch('bookings/:id/cancel')
+  cancelBooking(
+    @CurrentUser() user: any,
+    @Param('id') id: string
+  ) {
+    return this.clientService.cancelBooking(
+      user.userId,
+      id
+    );
+  }
+
+  @Patch('bookings/:id/reschedule')
+  rescheduleBooking(
+    @CurrentUser() user: any,
+    @Param('id') id: string,
+    @Body() dto: RescheduleBookingDto
+  ) {
+    return this.clientService.rescheduleBooking(
+      user.userId,
+      id,
+      dto.startAt
     );
   }
 }

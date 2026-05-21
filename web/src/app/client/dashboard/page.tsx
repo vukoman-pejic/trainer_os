@@ -28,16 +28,13 @@ type DashboardData = {
   activePackage?: {
     id: string;
     remainingSessions: number;
+    paymentStatus: 'PAID' | 'UNPAID';
     package: {
       name: string;
       sessionCount: number;
     };
   } | null;
-
-  nextSession?: Session | null;
-
-  recentPastSessions: Session[];
-};
+}
 
 export default function ClientDashboardPage() {
   const authorized = useAuthGuard({
@@ -107,6 +104,24 @@ export default function ClientDashboardPage() {
           Welcome back
         </p>
       </div>
+
+      {(!dashboard.activePackage ||
+        dashboard.activePackage.paymentStatus ===
+          'UNPAID') && (
+          <Card className="mb-6 border-amber-500/30 bg-amber-500/10 p-6">
+            <h2 className="text-lg font-semibold text-amber-300">
+              {!dashboard.activePackage
+                ? 'No Active Package'
+                : 'Payment Required'}
+            </h2>
+
+            <p className="mt-2 text-sm text-amber-200">
+              {!dashboard.activePackage
+                ? 'You currently do not have an active training package. Please contact your trainer.'
+                : 'Your current training package has not been paid yet. Please contact your trainer.'}
+            </p>
+          </Card>
+      )}
 
       <div className="grid grid-cols-3 gap-6">
         <Card className="p-6">

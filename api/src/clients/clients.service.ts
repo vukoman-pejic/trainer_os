@@ -3,6 +3,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import {
   BookingStatus,
   UserRole,
@@ -31,8 +32,10 @@ export class ClientsService {
       );
     }
 
-    const temporaryPassword =
-      'welcome123';
+    const temporaryPassword = randomBytes(6)
+      .toString('base64')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .slice(0, 10);
 
     const passwordHash =
       await bcrypt.hash(

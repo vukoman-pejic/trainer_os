@@ -26,7 +26,7 @@ export class BookingsService {
     const minutes = startAt.getMinutes();
 
     const allowedHours = [
-      8, 9, 10, 11, 16, 17, 18, 19, 20, 21, 22,
+      8, 9, 10, 11, 16, 17, 18, 19, 20, 21,
     ];
 
     if (

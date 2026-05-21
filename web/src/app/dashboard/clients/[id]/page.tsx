@@ -72,7 +72,6 @@ const SLOT_OPTIONS = [
   '19:00',
   '20:00',
   '21:00',
-  '22:00',
 ];
 
 export default function ClientDetailsPage() {

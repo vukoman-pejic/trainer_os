@@ -5,6 +5,7 @@ import {
   Calendar,
   User,
   LogOut,
+  PlusCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -63,6 +64,14 @@ export function ClientLayout({
           >
             <Calendar size={18} />
             My Sessions
+          </Link>
+
+          <Link
+            href="/client/book"
+            className={navClass('/client/book')}
+          >
+            <PlusCircle size={18} />
+            Book Session
           </Link>
 
           <Link
