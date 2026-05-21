@@ -12,26 +12,46 @@ export class DashboardService {
   async getTrainerDashboard(trainerId: string) {
     const now = new Date();
 
-    const todayStart = new Date();
+    const todayStart = new Date(now);
     todayStart.setHours(0, 0, 0, 0);
 
-    const todayEnd = new Date();
+    const todayEnd = new Date(now);
     todayEnd.setHours(23, 59, 59, 999);
 
-    const tomorrowStart = new Date();
+    const tomorrowStart = new Date(now);
     tomorrowStart.setDate(
       tomorrowStart.getDate() + 1
     );
     tomorrowStart.setHours(0, 0, 0, 0);
 
-    const tomorrowEnd = new Date();
+    const tomorrowEnd = new Date(now);
     tomorrowEnd.setDate(
       tomorrowEnd.getDate() + 1
     );
-    tomorrowEnd.setHours(23, 59, 59, 999);
+    tomorrowEnd.setHours(
+      23,
+      59,
+      59,
+      999
+    );
 
-    const weekEnd = new Date();
-    weekEnd.setDate(weekEnd.getDate() + 7);
+    const weekEnd = new Date(now);
+
+    const day = weekEnd.getDay();
+
+    const daysUntilSunday =
+      day === 0 ? 0 : 7 - day;
+
+    weekEnd.setDate(
+      weekEnd.getDate() + daysUntilSunday
+    );
+
+    weekEnd.setHours(
+      23,
+      59,
+      59,
+      999
+    );
 
     const [
       todaySessions,
