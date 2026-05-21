@@ -7,6 +7,8 @@ import {
   ActorType,
   BookingStatus,
   Prisma,
+  PaymentStatus,
+  NotificationType
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -497,6 +499,9 @@ export class ClientService {
               where: {
                 userId,
               },
+              include: {
+                user: true,
+              },
             });
 
           if (!profile) {
@@ -606,6 +611,14 @@ export class ClientService {
               },
             });
 
+          await this.notifyTrainer(
+            tx,
+            profile.trainerId,
+            NotificationType.CLIENT_BOOKED,
+            'New Session Booked',
+            `${profile.user.firstName} ${profile.user.lastName} booked a session at ${startAt.toLocaleString()}`
+          );
+
           await tx.clientPackage.update({
             where: {
               id: activePackage.id,
@@ -671,6 +684,12 @@ export class ClientService {
         },
         include: {
           clientPackage: true,
+          client: {
+            include: {
+              user: true,
+              trainer: true,
+            },
+          },
         },
       });
 
@@ -720,6 +739,18 @@ export class ClientService {
             active: true,
           },
         });
+        await this.notifyTrainer(
+          tx,
+          booking.client.trainerId,
+          NotificationType.CLIENT_CANCELLED,
+          'Session Cancelled',
+          `${booking.client.user.firstName} ${booking.client.user.lastName} cancelled a session on ${booking.startAt.toLocaleString()}`
+        );
+        await this.notifyAvailableSlot(
+          tx,
+          booking.startAt,
+          profile.id
+        );
       }
     );
 
@@ -775,6 +806,13 @@ export class ClientService {
                   ],
                 },
               },
+              include: {
+                client: {
+                  include: {
+                    user: true,
+                  },
+                },
+              },
             });
 
           if (!booking) {
@@ -782,6 +820,8 @@ export class ClientService {
               'Booking not found'
             );
           }
+
+          const oldStartAt = booking.startAt;
 
           const now = new Date();
 
@@ -906,17 +946,34 @@ export class ClientService {
             );
           }
 
-          return tx.booking.update({
-            where: {
-              id: booking.id,
-            },
-            data: {
-              startAt: newStartAt,
-              endAt: newEndAt,
-              status:
-                BookingStatus.RESCHEDULED,
-            },
-          });
+          const updatedBooking =
+            await tx.booking.update({
+              where: {
+                id: booking.id,
+              },
+              data: {
+                startAt: newStartAt,
+                endAt: newEndAt,
+                status:
+                  BookingStatus.RESCHEDULED,
+              },
+            });
+
+          await this.notifyTrainer(
+            tx,
+            booking.client.trainerId,
+            NotificationType.CLIENT_RESCHEDULED,
+            'Session Rescheduled',
+            `${booking.client.user.firstName} ${booking.client.user.lastName} rescheduled from ${oldStartAt.toLocaleString()} to ${newStartAt.toLocaleString()}`
+          );
+
+          await this.notifyAvailableSlot(
+            tx,
+            oldStartAt,
+            profile.id
+          );
+
+          return updatedBooking;
         },
         {
           isolationLevel:
@@ -933,5 +990,202 @@ export class ClientService {
 
       throw error;
     }
+  }
+
+  private async notifyAvailableSlot(
+    tx: Prisma.TransactionClient,
+    freedStartAt: Date,
+    excludingClientId?: string
+  ) {
+    const capacity =
+      this.getSlotCapacity(freedStartAt);
+
+    const activeBookings =
+      await tx.booking.count({
+        where: {
+          startAt: freedStartAt,
+          status: {
+            in: [
+              BookingStatus.CONFIRMED,
+              BookingStatus.RESCHEDULED,
+            ],
+          },
+        },
+      });
+
+    if (activeBookings >= capacity) {
+      return;
+    }
+
+    const weekStart = new Date(
+      freedStartAt
+    );
+
+    const day = weekStart.getDay();
+
+    const mondayOffset =
+      day === 0 ? -6 : 1 - day;
+
+    weekStart.setDate(
+      weekStart.getDate() + mondayOffset
+    );
+
+    weekStart.setHours(0, 0, 0, 0);
+
+    const weekEnd = new Date(weekStart);
+
+    weekEnd.setDate(
+      weekStart.getDate() + 6
+    );
+
+    weekEnd.setHours(
+      23,
+      59,
+      59,
+      999
+    );
+
+    const eligibleClients =
+      await tx.clientProfile.findMany({
+        include: {
+          user: true,
+          clientPackages: {
+            where: {
+              paymentStatus:
+                PaymentStatus.PAID,
+              remainingSessions: {
+                gt: 0,
+              },
+            },
+          },
+        },
+      });
+
+    const notifications = [];
+
+    for (const client of eligibleClients) {
+      if (
+        excludingClientId &&
+        client.id === excludingClientId
+      ) {
+        continue;
+      }
+
+      if (
+        client.clientPackages.length === 0
+      ) {
+        continue;
+      }
+
+      const alreadyBooked =
+        await tx.booking.findFirst({
+          where: {
+            clientId: client.id,
+            startAt: freedStartAt,
+            status: {
+              in: [
+                BookingStatus.CONFIRMED,
+                BookingStatus.RESCHEDULED,
+              ],
+            },
+          },
+        });
+
+      if (alreadyBooked) {
+        continue;
+      }
+
+      const weeklyCount =
+        await tx.booking.count({
+          where: {
+            clientId: client.id,
+            startAt: {
+              gte: weekStart,
+              lte: weekEnd,
+            },
+            status: {
+              in: [
+                BookingStatus.CONFIRMED,
+                BookingStatus.RESCHEDULED,
+              ],
+            },
+          },
+        });
+
+      if (weeklyCount >= 3) {
+        continue;
+      }
+
+      notifications.push({
+        userId: client.userId,
+        type:
+          NotificationType.SLOT_AVAILABLE,
+        title: 'Spot Available',
+        message: `A session at ${freedStartAt.toLocaleString()} just became available.`,
+      });
+    }
+
+    if (notifications.length > 0) {
+      await tx.notification.createMany({
+        data: notifications,
+      });
+    }
+  }
+
+  async getNotifications(userId: string) {
+    return this.prisma.notification.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 20,
+    });
+  }
+
+  async markNotificationRead(
+    userId: string,
+    notificationId: string
+  ) {
+    const notification =
+      await this.prisma.notification.findFirst({
+        where: {
+          id: notificationId,
+          userId,
+        },
+      });
+
+    if (!notification) {
+      throw new NotFoundException(
+        'Notification not found'
+      );
+    }
+
+    return this.prisma.notification.update({
+      where: {
+        id: notificationId,
+      },
+      data: {
+        read: true,
+      },
+    });
+  }
+
+  private async notifyTrainer(
+    tx: Prisma.TransactionClient,
+    trainerUserId: string,
+    type: NotificationType,
+    title: string,
+    message: string
+  ) {
+    await tx.notification.create({
+      data: {
+        userId: trainerUserId,
+        type,
+        title,
+        message,
+      },
+    });
   }
 }

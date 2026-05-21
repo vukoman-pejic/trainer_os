@@ -97,4 +97,24 @@ export class ClientController {
       dto.startAt
     );
   }
+
+  @Get('notifications')
+  getNotifications(
+    @CurrentUser() user: any
+  ) {
+    return this.clientService.getNotifications(
+      user.userId
+    );
+  }
+
+  @Patch('notifications/:id/read')
+  markNotificationRead(
+    @CurrentUser() user: any,
+    @Param('id') id: string
+  ) {
+    return this.clientService.markNotificationRead(
+      user.userId,
+      id
+    );
+  }
 }

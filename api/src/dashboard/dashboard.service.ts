@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class DashboardService {
@@ -188,5 +189,45 @@ export class DashboardService {
       weekEnd,
       sessions,
     };
+  }
+
+  async getNotifications(userId: string) {
+    return this.prisma.notification.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 20,
+    });
+  }
+
+  async markNotificationRead(
+    userId: string,
+    notificationId: string
+  ) {
+    const notification =
+      await this.prisma.notification.findFirst({
+        where: {
+          id: notificationId,
+          userId,
+        },
+      });
+
+    if (!notification) {
+      throw new NotFoundException(
+        'Notification not found'
+      );
+    }
+
+    return this.prisma.notification.update({
+      where: {
+        id: notificationId,
+      },
+      data: {
+        read: true,
+      },
+    });
   }
 }

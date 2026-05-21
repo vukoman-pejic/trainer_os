@@ -3,6 +3,8 @@ import {
   Get,
   Query,
   UseGuards,
+  Patch,
+  Param,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -34,6 +36,26 @@ export class DashboardController {
     return this.dashboardService.getCalendar(
       user.userId,
       Number(weekOffset || 0)
+    );
+  }
+
+  @Get('notifications')
+  getNotifications(
+    @CurrentUser() user: any
+  ) {
+    return this.dashboardService.getNotifications(
+      user.userId
+    );
+  }
+
+  @Patch('notifications/:id/read')
+  markNotificationRead(
+    @CurrentUser() user: any,
+    @Param('id') id: string
+  ) {
+    return this.dashboardService.markNotificationRead(
+      user.userId,
+      id
     );
   }
 }
