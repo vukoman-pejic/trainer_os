@@ -31,7 +31,7 @@ type DashboardData = {
     } | null;
   } | null;
 
-  recentPastSessions?: any[];
+  recentPastSessions: any[];
 };
 
 export default function ClientDashboardPage() {
