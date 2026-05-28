@@ -24,6 +24,11 @@ type DashboardData = {
 
   nextSession?: {
     startAt: string;
+
+    workoutTemplate?: {
+      name: string;
+      type: string;
+    } | null;
   } | null;
 };
 
