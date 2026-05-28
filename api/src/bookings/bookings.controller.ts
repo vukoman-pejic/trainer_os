@@ -63,4 +63,22 @@ export class BookingsController {
   findAll() {
     return this.bookingsService.findAll();
   }
+
+  @Patch(':id/approve-late-reschedule')
+  approveLateReschedule(
+    @Param('id') id: string
+  ) {
+    return this.bookingsService.approveLateReschedule(
+      id
+    );
+  }
+
+  @Patch(':id/reject-late-reschedule')
+  rejectLateReschedule(
+    @Param('id') id: string
+  ) {
+    return this.bookingsService.rejectLateReschedule(
+      id
+    );
+  }
 }

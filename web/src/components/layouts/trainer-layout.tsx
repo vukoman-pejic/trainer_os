@@ -26,6 +26,8 @@ type Notification = {
   id: string;
   title: string;
   message: string;
+  type: string;
+  bookingId?: string;
   read: boolean;
   createdAt: string;
 };
@@ -43,6 +45,11 @@ export function TrainerLayout({
 
   const [openNotifications, setOpenNotifications] =
     useState(false);
+
+  const [processedRequests, setProcessedRequests] =
+    useState<Record<string, 'approved' | 'rejected'>>(
+      {}
+    );
 
   async function loadNotifications() {
     try {
@@ -75,6 +82,66 @@ export function TrainerLayout({
       router.push('/dashboard/calendar');
     } catch {
       // ignore
+    }
+  }
+
+  async function approveLateRequest(
+    bookingId: string,
+    notificationId: string
+  ) {
+    try {
+      await apiFetch(
+        `/bookings/${bookingId}/approve-late-reschedule`,
+        {
+          method: 'PATCH',
+        }
+      );
+
+      await apiFetch(
+        `/dashboard/notifications/${notificationId}/read`,
+        {
+          method: 'PATCH',
+        }
+      );
+
+      await loadNotifications();
+
+      setProcessedRequests((prev) => ({
+        ...prev,
+        [notificationId]: 'approved',
+      }));
+    } catch (err: any) {
+      alert(err.message);
+    }
+  }
+
+  async function rejectLateRequest(
+    bookingId: string,
+    notificationId: string
+  ) {
+    try {
+      await apiFetch(
+        `/bookings/${bookingId}/reject-late-reschedule`,
+        {
+          method: 'PATCH',
+        }
+      );
+
+      await apiFetch(
+        `/dashboard/notifications/${notificationId}/read`,
+        {
+          method: 'PATCH',
+        }
+      );
+
+      await loadNotifications();
+
+      setProcessedRequests((prev) => ({
+        ...prev,
+        [notificationId]: 'rejected',
+      }));
+    } catch (err: any) {
+      alert(err.message);
     }
   }
 
@@ -204,7 +271,7 @@ export function TrainerLayout({
             ) : (
               notifications.map(
                 (notification) => (
-                  <button
+                  <div
                     key={notification.id}
                     onClick={() =>
                       handleNotificationClick(
@@ -224,7 +291,64 @@ export function TrainerLayout({
                     <p className="mt-2 break-words text-sm leading-relaxed text-slate-300">
                       {notification.message}
                     </p>
-                  </button>
+                    {notification.type ===
+                      'LATE_RESCHEDULE_REQUEST' &&
+                      notification.bookingId &&
+                      !notification.read && (
+                        <div className="mt-4">
+                          {processedRequests[
+                            notification.id
+                          ] ? (
+                            <div
+                              className={`rounded-xl px-3 py-2 text-sm font-medium ${
+                                processedRequests[
+                                  notification.id
+                                ] === 'approved'
+                                  ? 'bg-green-500/10 text-green-400'
+                                  : 'bg-red-500/10 text-red-400'
+                              }`}
+                            >
+                              {processedRequests[
+                                notification.id
+                              ] === 'approved'
+                                ? 'Request Approved'
+                                : 'Request Rejected'}
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+
+                                  approveLateRequest(
+                                    notification.bookingId!,
+                                    notification.id
+                                  );
+                                }}
+                              >
+                                Approve
+                              </Button>
+
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+
+                                  rejectLateRequest(
+                                    notification.bookingId!,
+                                    notification.id
+                                  );
+                                }}
+                              >
+                                Reject
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                  </div>
                 )
               )
             )}

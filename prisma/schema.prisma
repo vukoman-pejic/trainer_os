@@ -30,6 +30,7 @@ enum BookingStatus {
   CANCELLED
   NO_SHOW
   RESCHEDULED
+  PENDING_APPROVAL
 }
 
 enum ActorType {
@@ -48,6 +49,7 @@ enum NotificationType {
   CLIENT_BOOKED
   TRAINER_CANCELLED
   TRAINER_RESCHEDULED
+  LATE_RESCHEDULE_REQUEST
 }
 
 enum WorkoutType {
@@ -152,6 +154,8 @@ model Booking {
   workoutTemplateId  String?
   startAt            DateTime
   endAt              DateTime
+  requestedStartAt   DateTime?
+  requestedEndAt     DateTime?
   status             BookingStatus @default(CONFIRMED)
   createdBy          ActorType
   cancelledBy        ActorType?
@@ -167,6 +171,7 @@ model Booking {
   workoutTemplate  WorkoutTemplate?  @relation(fields: [workoutTemplateId], references: [id])
 
   workoutLog WorkoutLog?
+  notifications Notification[]
 }
 
 model WorkoutLog {
@@ -195,6 +200,7 @@ model ExerciseLog {
 model Notification {
   id        String           @id @default(uuid())
   userId    String
+  bookingId String?
   type      NotificationType
   title     String
   message   String
@@ -202,4 +208,6 @@ model Notification {
   createdAt DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  booking Booking? @relation(fields: [bookingId], references: [id])
 }
