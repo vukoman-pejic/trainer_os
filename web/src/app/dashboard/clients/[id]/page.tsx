@@ -421,8 +421,8 @@ export default function ClientDetailsPage() {
           <div className="mb-8 flex items-start justify-between">
             <div>
               <h1 className="text-4xl font-bold">
-                {client.user.firstName}{' '}
-                {client.user.lastName}
+                {client?.user?.firstName}{' '}
+                {client?.user?.lastName}
               </h1>
 
               <p className="mt-2 text-slate-400">
@@ -922,8 +922,8 @@ export default function ClientDetailsPage() {
               <span className="text-slate-400">
                 Client:
               </span>{' '}
-              {client.user.firstName}{' '}
-              {client.user.lastName}
+              {client?.user?.firstName}{' '}
+              {client?.user?.lastName}
             </p>
 
             <p>
