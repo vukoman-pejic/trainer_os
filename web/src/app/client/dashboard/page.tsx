@@ -11,12 +11,6 @@ import { Card } from '../../../components/ui/card';
 import { apiFetch } from '../../../lib/api';
 import { useAuthGuard } from '../../../hooks/use-auth-guard';
 
-type Workout = {
-  id: string;
-  name: string;
-  type: 'HERCULES' | 'REFORMER';
-};
-
 type DashboardData = {
   activePackage?: {
     id: string;
