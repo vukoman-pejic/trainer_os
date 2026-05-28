@@ -357,7 +357,7 @@ export default function ClientBookPage() {
 
               <div className="mt-6 flex gap-3">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   className="flex-1"
                   onClick={closePopup}
                 >
@@ -393,7 +393,7 @@ export default function ClientBookPage() {
 
               <div className="mt-6 flex flex-col gap-3">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() =>
                     setPopupMode(
                       'reschedule'
