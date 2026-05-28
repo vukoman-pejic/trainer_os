@@ -319,7 +319,7 @@ export default function CalendarPage() {
 
         <div className="flex gap-3">
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() =>
               setWeekOffset(
                 weekOffset - 1
@@ -330,7 +330,7 @@ export default function CalendarPage() {
           </Button>
 
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() =>
               setWeekOffset(
                 weekOffset + 1
@@ -568,7 +568,7 @@ export default function CalendarPage() {
             <Link
               href={`/dashboard/clients/${selectedBooking.client.id}`}
             >
-              <Button variant="outline">
+              <Button variant="ghost">
                 Open Client
               </Button>
             </Link>
