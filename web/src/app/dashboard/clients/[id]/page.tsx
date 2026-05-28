@@ -432,7 +432,7 @@ export default function ClientDetailsPage() {
 
             <div className="flex gap-3">
               <Button
-                variant="outline"
+                variant="ghost"
                 disabled={resettingPassword}
                 onClick={resetClientPassword}
               >
@@ -442,7 +442,7 @@ export default function ClientDetailsPage() {
               </Button>
 
               <Button
-                variant="destructive"
+                variant="ghost"
                 onClick={() =>
                   setShowDeleteConfirm(true)
                 }
@@ -780,7 +780,7 @@ export default function ClientDetailsPage() {
 
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="ghost"
                               onClick={() => {
                                 setRescheduleBookingId(null);
                                 setRescheduleTime('');
@@ -799,7 +799,7 @@ export default function ClientDetailsPage() {
                           <div className="flex gap-2">
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="ghost"
                               onClick={() => {
                                 setRescheduleBookingId(
                                   booking.id
@@ -812,7 +812,7 @@ export default function ClientDetailsPage() {
 
                             <Button
                               size="sm"
-                              variant="destructive"
+                              variant="ghost"
                               disabled={
                                 cancelLoadingId === booking.id
                               }
@@ -887,7 +887,7 @@ export default function ClientDetailsPage() {
 
           <div className="mt-6 flex gap-3">
             <Button
-              variant="outline"
+              variant="ghost"
               className="flex-1"
               onClick={() =>
                 setShowDeleteConfirm(false)
@@ -897,7 +897,7 @@ export default function ClientDetailsPage() {
             </Button>
 
             <Button
-              variant="destructive"
+              variant="ghost"
               className="flex-1"
               disabled={deletingClient}
               onClick={deleteClient}
@@ -936,7 +936,7 @@ export default function ClientDetailsPage() {
 
           <div className="mt-6 flex gap-3">
             <Button
-              variant="outline"
+              variant="ghost"
               className="flex-1"
               onClick={() => {
                 setShowAssignConfirm(false);

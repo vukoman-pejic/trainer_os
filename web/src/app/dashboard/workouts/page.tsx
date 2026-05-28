@@ -180,7 +180,7 @@ export default function WorkoutsPage() {
                       </div>
 
                       <Button
-                        variant="destructive"
+                        variant="ghost"
                         onClick={() =>
                           deleteWorkout(
                             workout.id
@@ -234,7 +234,7 @@ export default function WorkoutsPage() {
                       </div>
 
                       <Button
-                        variant="destructive"
+                        variant="ghost"
                         onClick={() =>
                           deleteWorkout(
                             workout.id

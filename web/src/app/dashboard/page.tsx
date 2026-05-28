@@ -106,7 +106,7 @@ export default function DashboardPage() {
           </Link>
 
           <Link href="/dashboard/calendar">
-            <Button variant="outline">
+            <Button variant="ghost">
               Full Calendar
             </Button>
           </Link>

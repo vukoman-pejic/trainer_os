@@ -332,7 +332,7 @@ export function TrainerLayout({
 
                               <Button
                                 size="sm"
-                                variant="destructive"
+                                variant="ghost"
                                 onClick={(e) => {
                                   e.stopPropagation();
 

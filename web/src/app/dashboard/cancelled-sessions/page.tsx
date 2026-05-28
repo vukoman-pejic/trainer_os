@@ -190,7 +190,7 @@ export default function CancelledSessionsPage() {
       totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-4">
           <Button
-            variant="outline"
+            variant="ghost"
             disabled={page === 1}
             onClick={() =>
               setPage(page - 1)
@@ -204,7 +204,7 @@ export default function CancelledSessionsPage() {
           </span>
 
           <Button
-            variant="outline"
+            variant="ghost"
             disabled={
               page === totalPages
             }
