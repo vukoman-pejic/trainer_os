@@ -20,11 +20,12 @@ type DashboardData = {
       name: string;
       sessionCount: number;
     };
-    nextSession?: {
-        startAt: string;
-    };
   } | null;
-}
+
+  nextSession?: {
+    startAt: string;
+  } | null;
+};
 
 export default function ClientDashboardPage() {
   const authorized = useAuthGuard({
