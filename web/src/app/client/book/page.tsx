@@ -404,7 +404,7 @@ export default function ClientBookPage() {
                 </Button>
 
                 <Button
-                  variant="destructive"
+                  className="flex-1 border border-red-500/30 text-red-400 hover:bg-red-500/10"
                   disabled={processing}
                   onClick={cancelBooking}
                 >
