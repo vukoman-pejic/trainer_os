@@ -501,4 +501,134 @@ export class BookingsService {
       },
     });
   }
+
+  async approveLateReschedule(
+    bookingId: string
+  ) {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const booking =
+          await tx.booking.findUnique({
+            where: {
+              id: bookingId,
+            },
+            include: {
+              client: {
+                include: {
+                  user: true,
+                },
+              },
+            },
+          });
+
+        if (!booking) {
+          throw new NotFoundException(
+            'Booking not found'
+          );
+        }
+
+        if (
+          booking.status !==
+          BookingStatus.PENDING_APPROVAL
+        ) {
+          throw new BadRequestException(
+            'Booking is not pending approval'
+          );
+        }
+
+        if (
+          !booking.requestedStartAt ||
+          !booking.requestedEndAt
+        ) {
+          throw new BadRequestException(
+            'Missing requested session data'
+          );
+        }
+
+        const updatedBooking =
+          await tx.booking.update({
+            where: {
+              id: booking.id,
+            },
+            data: {
+              startAt:
+                booking.requestedStartAt,
+              endAt:
+                booking.requestedEndAt,
+              requestedStartAt: null,
+              requestedEndAt: null,
+              status:
+                BookingStatus.RESCHEDULED,
+            },
+          });
+
+        await tx.notification.create({
+          data: {
+            userId:
+              booking.client.userId,
+            type:
+              NotificationType.REQUEST_APPROVED,
+            title:
+              'Late Session Approved',
+            message: `Your trainer approved your 21:00 session request for ${booking.startAt.toLocaleString()}`,
+          },
+        });
+
+        return updatedBooking;
+      }
+    );
+  }
+
+  async rejectLateReschedule(
+    bookingId: string
+  ) {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const booking =
+          await tx.booking.findUnique({
+            where: {
+              id: bookingId,
+            },
+            include: {
+              client: true,
+            },
+          });
+
+        if (!booking) {
+          throw new NotFoundException(
+            'Booking not found'
+          );
+        }
+
+        await tx.booking.update({
+          where: {
+            id: booking.id,
+          },
+          data: {
+            requestedStartAt: null,
+            requestedEndAt: null,
+            status:
+              BookingStatus.CONFIRMED,
+          },
+        });
+
+        await tx.notification.create({
+          data: {
+            userId:
+              booking.client.userId,
+            type:
+              NotificationType.REQUEST_REJECTED,
+            title:
+              'Late Session Rejected',
+            message:
+              'Your trainer rejected your 21:00 session request',
+          },
+        });
+
+        return {
+          success: true,
+        };
+      }
+    );
+  }
 }

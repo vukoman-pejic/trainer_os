@@ -211,10 +211,15 @@ export default function ClientBookPage() {
   const nextWeek =
     availability.days.slice(7, 14);
 
-  const visibleDays =
+  const visibleDays = (
     activeTab === 'current'
       ? currentWeek
-      : nextWeek;
+      : nextWeek
+  ).filter((day) => {
+    const date = new Date(day.date);
+
+    return date.getDay() !== 0;
+  });
 
   return (
     <ClientLayout>
@@ -267,7 +272,7 @@ export default function ClientBookPage() {
       </div>
 
       <div className="overflow-x-auto">
-        <div className="grid grid-cols-7 gap-4">
+        <div className="grid grid-cols-6 gap-4">
           {visibleDays.map((day) => (
             <Card
               key={day.date}
@@ -278,8 +283,30 @@ export default function ClientBookPage() {
               </h2>
 
               <div className="space-y-3">
-                {day.slots.map((slot) => (
-                  <button
+                {day.slots
+                  .filter((slot) => {
+                    const date = new Date(
+                      slot.startAt
+                    );
+
+                    const dayOfWeek =
+                      date.getDay();
+
+                    const hour =
+                      date.getHours();
+
+                    if (dayOfWeek === 6) {
+                      return (
+                        hour >= 8 &&
+                        hour <= 11
+                      );
+                    }
+
+                    return true;
+                  })
+                  .map(
+                    (slot) => (
+                      <button
                     key={slot.startAt}
                     onClick={() =>
                       handleSlotClick(slot)
@@ -406,7 +433,7 @@ export default function ClientBookPage() {
                   Select New Slot
                 </h2>
 
-                <div className="grid grid-cols-7 gap-4">
+                <div className="grid grid-cols-6 gap-4">
                   {visibleDays.map((day) => (
                     <Card
                       key={day.date}
@@ -417,12 +444,30 @@ export default function ClientBookPage() {
                       </h3>
 
                       <div className="space-y-3">
-                        {day.slots.map(
-                          (slot) => (
+                        {day.slots
+                          .filter((slot) => {
+                            const date = new Date(
+                              slot.startAt
+                            );
+
+                            const dayOfWeek =
+                              date.getDay();
+
+                            const hour =
+                              date.getHours();
+
+                            if (dayOfWeek === 6) {
+                              return (
+                                hour >= 8 &&
+                                hour <= 11
+                              );
+                            }
+
+                            return true;
+                          })
+                          .map((slot) => (
                             <button
-                              key={
-                                slot.startAt
-                              }
+                              key={slot.startAt}
                               disabled={
                                 slot.isFull ||
                                 slot.bookedByClient

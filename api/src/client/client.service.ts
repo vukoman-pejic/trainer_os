@@ -40,12 +40,42 @@ export class ClientService {
   }
 
   private validateSlot(startAt: Date) {
-    const hour = startAt.getHours();
-    const minutes = startAt.getMinutes();
+    const day = startAt.getDay();
 
-    const allowedHours = [
-      8, 9, 10, 11, 16, 17, 18, 19, 20, 21,
+    if (day === 0) {
+      throw new BadRequestException(
+        'Studio is closed on Sundays'
+      );
+    }
+
+    const hour = startAt.getHours();
+    const minutes =
+      startAt.getMinutes();
+
+    const weekdayHours = [
+      8,
+      9,
+      10,
+      11,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
     ];
+
+    const saturdayHours = [
+      8,
+      9,
+      10,
+      11,
+    ];
+
+    const allowedHours =
+      day === 6
+        ? saturdayHours
+        : weekdayHours;
 
     if (
       minutes !== 0 ||
@@ -944,6 +974,39 @@ export class ClientService {
             throw new BadRequestException(
               'Selected slot is full'
             );
+          }
+
+          const requiresApproval =
+            newStartAt.getHours() === 21;
+
+          if (requiresApproval) {
+            await tx.booking.update({
+              where: {
+                id: booking.id,
+              },
+              data: {
+                status:
+                  BookingStatus.PENDING_APPROVAL,
+                requestedStartAt: newStartAt,
+                requestedEndAt: newEndAt,
+              },
+            });
+
+            await tx.notification.create({
+              data: {
+                userId: booking.client.trainerId,
+                bookingId: booking.id,
+                type:
+                  NotificationType.LATE_RESCHEDULE_REQUEST,
+                title: 'Late Session Approval',
+                message: `${booking.client.user.firstName} ${booking.client.user.lastName} requested reschedule to ${newStartAt.toLocaleString()}`,
+              },
+            });
+
+            return {
+              success: true,
+              pendingApproval: true,
+            };
           }
 
           const updatedBooking =
