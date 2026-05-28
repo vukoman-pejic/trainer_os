@@ -317,7 +317,7 @@ export function TrainerLayout({
                           ) : (
                             <div className="flex gap-2">
                               <Button
-                                size="sm"
+                                size="default"
                                 onClick={(e) => {
                                   e.stopPropagation();
 
@@ -331,7 +331,7 @@ export function TrainerLayout({
                               </Button>
 
                               <Button
-                                size="sm"
+                                size="default"
                                 variant="ghost"
                                 onClick={(e) => {
                                   e.stopPropagation();

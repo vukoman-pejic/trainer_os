@@ -715,7 +715,7 @@ export default function ClientDetailsPage() {
                         </select>
 
                         <Button
-                          size="sm"
+                          size="default"
                           className="w-full"
                           disabled={
                             workoutSavingId ===
@@ -769,7 +769,7 @@ export default function ClientDetailsPage() {
 
                           <div className="flex gap-2">
                             <Button
-                              size="sm"
+                              size="default"
                               disabled={rescheduleLoading}
                               onClick={rescheduleBooking}
                             >
@@ -779,7 +779,7 @@ export default function ClientDetailsPage() {
                             </Button>
 
                             <Button
-                              size="sm"
+                              size="default"
                               variant="ghost"
                               onClick={() => {
                                 setRescheduleBookingId(null);
@@ -798,7 +798,7 @@ export default function ClientDetailsPage() {
 
                           <div className="flex gap-2">
                             <Button
-                              size="sm"
+                              size="default"
                               variant="ghost"
                               onClick={() => {
                                 setRescheduleBookingId(
@@ -811,7 +811,7 @@ export default function ClientDetailsPage() {
                             </Button>
 
                             <Button
-                              size="sm"
+                              size="default"
                               variant="ghost"
                               disabled={
                                 cancelLoadingId === booking.id
