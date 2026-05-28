@@ -17,13 +17,6 @@ type Workout = {
   type: 'HERCULES' | 'REFORMER';
 };
 
-type Session = {
-  id: string;
-  startAt: string;
-  status: string;
-  workoutTemplate?: Workout | null;
-};
-
 type DashboardData = {
   activePackage?: {
     id: string;
