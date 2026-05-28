@@ -20,6 +20,9 @@ type DashboardData = {
       name: string;
       sessionCount: number;
     };
+    nextSession?: {
+        startAt: string;
+    };
   } | null;
 }
 
