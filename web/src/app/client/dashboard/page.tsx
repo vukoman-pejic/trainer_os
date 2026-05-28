@@ -30,6 +30,8 @@ type DashboardData = {
       type: string;
     } | null;
   } | null;
+
+  recentPastSessions?: any[];
 };
 
 export default function ClientDashboardPage() {
