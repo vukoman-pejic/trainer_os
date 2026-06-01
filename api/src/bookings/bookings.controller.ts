@@ -81,4 +81,15 @@ export class BookingsController {
       id
     );
   }
+
+  @Post(':id/workout-log')
+  saveWorkoutLog(
+    @Param('id') bookingId: string,
+    @Body() dto: SaveWorkoutLogDto,
+  ) {
+    return this.bookingsService.saveWorkoutLog(
+      bookingId,
+      dto,
+    );
+  }
 }

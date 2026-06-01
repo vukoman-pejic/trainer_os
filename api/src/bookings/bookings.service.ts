@@ -631,4 +631,67 @@ export class BookingsService {
       }
     );
   }
+
+  async saveWorkoutLog(
+    bookingId: string,
+    dto: SaveWorkoutLogDto,
+  ) {
+    const booking =
+      await this.prisma.booking.findUnique({
+        where: {
+          id: bookingId,
+        },
+      });
+
+    if (!booking) {
+      throw new NotFoundException(
+        'Booking not found'
+      );
+    }
+
+    return this.prisma.$transaction(
+      async (tx) => {
+        const workoutLog =
+          await tx.workoutLog.upsert({
+            where: {
+              bookingId,
+            },
+            update: {
+              notes: dto.notes,
+            },
+            create: {
+              bookingId,
+              notes: dto.notes,
+            },
+          });
+
+        await tx.exerciseLog.deleteMany({
+          where: {
+            workoutLogId: workoutLog.id,
+          },
+        });
+
+        if (dto.exercises.length > 0) {
+          await tx.exerciseLog.createMany({
+            data: dto.exercises
+              .filter(
+                (e) =>
+                  e.weight ||
+                  e.reps ||
+                  e.notes
+              )
+              .map((e) => ({
+                workoutLogId: workoutLog.id,
+                name: e.name,
+                weight: e.weight,
+                reps: e.reps,
+                notes: e.notes,
+              })),
+          });
+        }
+
+        return workoutLog;
+      }
+    );
+  }
 }

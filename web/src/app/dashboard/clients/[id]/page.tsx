@@ -54,10 +54,24 @@ type Booking = {
   startAt: string;
   endAt: string;
   status: string;
+
   workoutTemplate?: {
     id: string;
     name: string;
     type: 'HERCULES' | 'REFORMER';
+    content: string;
+  } | null;
+
+  workoutLog?: {
+    notes?: string | null;
+
+    exercises: {
+      id: string;
+      name: string;
+      weight?: number | null;
+      reps?: number | null;
+      notes?: string | null;
+    }[];
   } | null;
 };
 
@@ -142,6 +156,26 @@ export default function ClientDetailsPage() {
     useState('');
   const [error, setError] =
     useState('');
+  const [showWorkoutLogModal, setShowWorkoutLogModal] =
+    useState(false);
+
+  const [selectedBookingForLog, setSelectedBookingForLog] =
+    useState<Booking | null>(null);
+
+  const [exerciseLogs, setExerciseLogs] =
+    useState<
+      {
+        name: string;
+        weight?: string;
+        reps?: string;
+      }[]
+    >([]);
+
+  const [workoutLogNotes, setWorkoutLogNotes] =
+    useState('');
+
+  const [savingWorkoutLog, setSavingWorkoutLog] =
+    useState(false);
 
   async function loadClientData() {
     const clientData = await apiFetch(
@@ -329,6 +363,67 @@ export default function ClientDetailsPage() {
       alert(err.message);
     } finally {
       setWorkoutSavingId(null);
+    }
+  }
+
+  function openWorkoutLogModal(
+    booking: Booking
+  ) {
+    const exercises =
+      booking.workoutTemplate?.content
+        ?.split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((exercise) => ({
+          name: exercise,
+          weight: '',
+          reps: '',
+        })) ?? [];
+
+    setSelectedBookingForLog(booking);
+    setExerciseLogs(exercises);
+    setWorkoutLogNotes('');
+    setShowWorkoutLogModal(true);
+  }
+
+  async function saveWorkoutLog() {
+    if (!selectedBookingForLog) return;
+
+    try {
+      setSavingWorkoutLog(true);
+
+      await apiFetch(
+        `/bookings/${selectedBookingForLog.id}/workout-log`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            notes: workoutLogNotes,
+            exercises: exerciseLogs.map(
+              (exercise) => ({
+                name: exercise.name,
+                weight: exercise.weight
+                  ? Number(
+                      exercise.weight
+                    )
+                  : undefined,
+                reps: exercise.reps
+                  ? Number(
+                      exercise.reps
+                    )
+                  : undefined,
+              })
+            ),
+          }),
+        }
+      );
+
+      setShowWorkoutLogModal(false);
+
+      await loadClientData();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSavingWorkoutLog(false);
     }
   }
 
@@ -864,6 +959,39 @@ export default function ClientDetailsPage() {
                           No workout assigned
                         </p>
                       )}
+                      {booking.workoutLog?.exercises?.length ? (
+                        <div className="mt-4 rounded-xl border border-green-500/20 p-3">
+                          <p className="mb-2 text-sm font-semibold text-green-400">
+                            Results Recorded
+                          </p>
+
+                          {booking.workoutLog.exercises.map(
+                            (exercise) => (
+                              <p
+                                key={exercise.id}
+                                className="text-sm text-slate-300"
+                              >
+                                {exercise.name}
+                                {exercise.weight
+                                  ? ` • ${exercise.weight}kg`
+                                  : ''}
+                                {exercise.reps
+                                  ? ` x ${exercise.reps}`
+                                  : ''}
+                              </p>
+                            )
+                          )}
+                        </div>
+                      ) : (
+                        <Button
+                          className="mt-4"
+                          onClick={() =>
+                            openWorkoutLogModal(booking)
+                          }
+                        >
+                          Record Results
+                        </Button>
+                      )}
                     </div>
                   ))
                 )}
@@ -958,6 +1086,112 @@ export default function ClientDetailsPage() {
           </div>
         </Card>
       </div>
+    )}
+    {showWorkoutLogModal &&
+      selectedBookingForLog && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70">
+          <Card className="max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6">
+            <h2 className="text-xl font-semibold">
+              Workout Results
+            </h2>
+
+            <div className="mt-6 space-y-4">
+              {exerciseLogs.map(
+                (exercise, index) => (
+                  <div
+                    key={index}
+                    className="rounded-xl border border-white/10 p-4"
+                  >
+                    <p className="mb-3 font-medium">
+                      {exercise.name}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        placeholder="Weight (kg)"
+                        value={
+                          exercise.weight || ''
+                        }
+                        onChange={(e) => {
+                          const copy = [
+                            ...exerciseLogs,
+                          ];
+
+                          copy[index].weight =
+                            e.target.value;
+
+                          setExerciseLogs(
+                            copy
+                          );
+                        }}
+                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                      />
+
+                      <input
+                        placeholder="Reps"
+                        value={
+                          exercise.reps || ''
+                        }
+                        onChange={(e) => {
+                          const copy = [
+                            ...exerciseLogs,
+                          ];
+
+                          copy[index].reps =
+                            e.target.value;
+
+                          setExerciseLogs(
+                            copy
+                          );
+                        }}
+                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                      />
+                    </div>
+                  </div>
+                )
+              )}
+
+              <textarea
+                placeholder="Session notes..."
+                value={workoutLogNotes}
+                onChange={(e) =>
+                  setWorkoutLogNotes(
+                    e.target.value
+                  )
+                }
+                className="min-h-[120px] w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+              />
+
+              <div className="flex gap-3">
+                <Button
+                  variant="ghost"
+                  className="flex-1"
+                  onClick={() =>
+                    setShowWorkoutLogModal(
+                      false
+                    )
+                  }
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  className="flex-1"
+                  disabled={
+                    savingWorkoutLog
+                  }
+                  onClick={
+                    saveWorkoutLog
+                  }
+                >
+                  {savingWorkoutLog
+                    ? 'Saving...'
+                    : 'Save Results'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
     )}
     </TrainerLayout>
   );

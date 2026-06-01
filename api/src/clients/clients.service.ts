@@ -131,6 +131,11 @@ export class ClientsService {
         },
         include: {
           workoutTemplate: true,
+          workoutLog: {
+            include: {
+              exercises: true,
+            },
+          },
           clientPackage: {
             include: {
               package: true,
@@ -158,6 +163,11 @@ export class ClientsService {
         },
         include: {
           workoutTemplate: true,
+          workoutLog: {
+            include: {
+              exercises: true,
+            },
+          },
           clientPackage: {
             include: {
               package: true,
