@@ -16,6 +16,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 import { AssignWorkoutDto } from './dto/assign-workout.dto';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { SaveWorkoutLogDto } from './dto/save-workout-log.dto';
 
 @Controller('bookings')
 @UseGuards(JwtAuthGuard, RolesGuard)

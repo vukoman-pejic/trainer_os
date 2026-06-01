@@ -6,6 +6,7 @@ import {
 import { ActorType, BookingStatus, NotificationType, Prisma, } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { SaveWorkoutLogDto } from './dto/save-workout-log.dto';
 
 @Injectable()
 export class BookingsService {

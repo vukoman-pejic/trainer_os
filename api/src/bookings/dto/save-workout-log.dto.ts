@@ -6,7 +6,7 @@ import {
 
 export class SaveWorkoutLogDto {
   @IsArray()
-  exercises: {
+  exercises!: {
     name: string;
     weight?: number;
     reps?: number;
