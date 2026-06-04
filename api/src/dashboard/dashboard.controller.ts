@@ -12,6 +12,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { DashboardService } from './dashboard.service';
+import { Query } from '@nestjs/common';
 
 @Controller('dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -52,10 +53,14 @@ export class DashboardController {
 
   @Get('notifications')
   getNotifications(
-    @CurrentUser() user: any
+    @CurrentUser() user: any,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
   ) {
     return this.dashboardService.getNotifications(
-      user.userId
+      user.userId,
+      take ? Number(take) : 20,
+      skip ? Number(skip) : 0,
     );
   }
 
@@ -67,6 +72,15 @@ export class DashboardController {
     return this.dashboardService.markNotificationRead(
       user.userId,
       id
+    );
+  }
+
+  @Patch('notifications/read-all')
+  markAllNotificationsRead(
+    @CurrentUser() user: any
+  ) {
+    return this.dashboardService.markAllNotificationsRead(
+      user.userId
     );
   }
 }

@@ -1265,6 +1265,24 @@ export class ClientService {
     });
   }
 
+  async markAllNotificationsRead(
+    userId: string
+  ) {
+    await this.prisma.notification.updateMany({
+      where: {
+        userId,
+        read: false,
+      },
+      data: {
+        read: true,
+      },
+    });
+
+    return {
+      success: true,
+    };
+  }
+
   private async notifyTrainer(
     tx: Prisma.TransactionClient,
     trainerUserId: string,

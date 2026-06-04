@@ -117,4 +117,13 @@ export class ClientController {
       id
     );
   }
+
+  @Patch('notifications/read-all')
+  markAllNotificationsRead(
+    @CurrentUser() user: any
+  ) {
+    return this.clientService.markAllNotificationsRead(
+      user.userId
+    );
+  }
 }

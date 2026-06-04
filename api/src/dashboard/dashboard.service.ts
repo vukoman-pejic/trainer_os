@@ -212,7 +212,11 @@ export class DashboardService {
     };
   }
 
-  async getNotifications(userId: string) {
+  async getNotifications(
+    userId: string,
+    take = 20,
+    skip = 0
+  ) {
     return this.prisma.notification.findMany({
       where: {
         userId,
@@ -220,7 +224,8 @@ export class DashboardService {
       orderBy: {
         createdAt: 'desc',
       },
-      take: 20,
+      take,
+      skip,
     });
   }
 
@@ -250,6 +255,24 @@ export class DashboardService {
         read: true,
       },
     });
+  }
+
+  async markAllNotificationsRead(
+    userId: string
+  ) {
+    await this.prisma.notification.updateMany({
+      where: {
+        userId,
+        read: false,
+      },
+      data: {
+        read: true,
+      },
+    });
+
+    return {
+      success: true,
+    };
   }
 
   async getCancelledSessions(

@@ -77,6 +77,26 @@ export function ClientLayout({
     }
   }
 
+  async function markAllNotificationsRead() {
+    try {
+      await apiFetch(
+        '/client/notifications/read-all',
+        {
+          method: 'PATCH',
+        }
+      );
+
+      setNotifications((current) =>
+        current.map((notification) => ({
+          ...notification,
+          read: true,
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   function handleLogout() {
     logout();
     router.push('/login');
@@ -187,6 +207,18 @@ export function ClientLayout({
             Notifications
           </h2>
 
+          {notifications.some(
+            (notification) => !notification.read
+          ) && (
+            <div className="mb-4 flex justify-end">
+              <Button
+                variant="ghost"
+                onClick={markAllNotificationsRead}
+              >
+                Mark all as read
+              </Button>
+            </div>
+          )}
           <div className="max-h-96 space-y-3 overflow-y-auto">
             {notifications.length === 0 ? (
               <p className="text-sm text-slate-400">

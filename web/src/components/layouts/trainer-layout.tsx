@@ -43,6 +43,12 @@ export function TrainerLayout({
   const [notifications, setNotifications] =
     useState<Notification[]>([]);
 
+  const [notificationsSkip, setNotificationsSkip] =
+    useState(0);
+
+  const [hasMoreNotifications, setHasMoreNotifications] =
+    useState(true);
+
   const [openNotifications, setOpenNotifications] =
     useState(false);
 
@@ -51,13 +57,59 @@ export function TrainerLayout({
       {}
     );
 
-  async function loadNotifications() {
+  async function loadNotifications(
+    reset = true
+  ) {
     try {
+      const skip = reset
+        ? 0
+        : notificationsSkip;
+
       const data = await apiFetch(
-        '/dashboard/notifications'
+        `/dashboard/notifications?take=20&skip=${skip}`
       );
 
-      setNotifications(data);
+      if (reset) {
+        setNotifications(data);
+        setNotificationsSkip(20);
+      } else {
+        setNotifications((current) => [
+          ...current,
+          ...data,
+        ]);
+
+        setNotificationsSkip(
+          skip + data.length
+        );
+      }
+
+      setHasMoreNotifications(
+        data.length === 20
+      );
+    } catch {
+      // ignore
+    }
+  }
+
+  async function loadMoreNotifications() {
+    await loadNotifications(false);
+  }
+
+  async function markAllNotificationsRead() {
+    try {
+      await apiFetch(
+        '/dashboard/notifications/read-all',
+        {
+          method: 'PATCH',
+        }
+      );
+
+      setNotifications((current) =>
+        current.map((notification) => ({
+          ...notification,
+          read: true,
+        }))
+      );
     } catch {
       // ignore
     }
@@ -263,6 +315,20 @@ export function TrainerLayout({
             Notifications
           </h2>
 
+          {notifications.some(
+            (notification) => !notification.read
+          ) && (
+            <div className="mb-4 flex justify-end">
+              <Button
+                variant="ghost"
+                size="default"
+                onClick={markAllNotificationsRead}
+              >
+                Mark all as read
+              </Button>
+            </div>
+          )}
+
           <div className="max-h-96 space-y-3 overflow-y-auto">
             {notifications.length === 0 ? (
               <p className="text-sm text-slate-400">
@@ -353,6 +419,16 @@ export function TrainerLayout({
               )
             )}
           </div>
+          {hasMoreNotifications && (
+            <div className="mt-4 flex justify-center">
+              <Button
+                variant="ghost"
+                onClick={loadMoreNotifications}
+              >
+                Load More
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
