@@ -546,11 +546,25 @@ export class ClientService {
                 clientId: profile.id,
                 active: true,
               },
+              include: {
+                package: true,
+              },
             });
 
           if (!activePackage) {
             throw new BadRequestException(
               'No active package'
+            );
+          }
+
+          if (
+            this.isIndividualOnlySlot(startAt) &&
+            !this.isIndividualPackage(
+              activePackage.package.name
+            )
+          ) {
+            throw new BadRequestException(
+              'This slot is available only for individual packages'
             );
           }
 
@@ -842,12 +856,28 @@ export class ClientService {
                     user: true,
                   },
                 },
+                clientPackage: {
+                  include: {
+                    package: true,
+                  },
+                },
               },
             });
 
           if (!booking) {
             throw new NotFoundException(
               'Booking not found'
+            );
+          }
+
+          if (
+            this.isIndividualOnlySlot(newStartAt) &&
+            !this.isIndividualPackage(
+              booking.clientPackage.package.name
+            )
+          ) {
+            throw new BadRequestException(
+              'This slot is available only for individual packages'
             );
           }
 
@@ -1250,5 +1280,18 @@ export class ClientService {
         message,
       },
     });
+  }
+
+  private isIndividualOnlySlot(startAt: Date) {
+    const hour = startAt.getHours();
+
+    return hour === 9 || hour === 11;
+  }
+
+  private isIndividualPackage(packageName: string) {
+    return [
+      '8 Individual',
+      '12 Individual',
+    ].includes(packageName);
   }
 }
