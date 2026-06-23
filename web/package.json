@@ -1,0 +1,13 @@
+{
+  "name": "trainer-os-web",
+  "private": true,
+  "scripts": {
+    "build": "cd .. && npx nx build web"
+  },
+  "dependencies": {
+    "next": "16.1.7",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {}
+}
