@@ -1,29 +1,72 @@
-import { PrismaClient, UserRole, PaymentStatus } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  const passwordHash = await bcrypt.hash('trainer123', 10);
+async function upsertTrainer(data: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+}) {
+  const passwordHash = await bcrypt.hash(data.password, 10);
 
-  const trainer = await prisma.user.upsert({
+  return prisma.user.upsert({
     where: {
-      email: 'trainer@test.com',
+      email: data.email,
     },
     update: {},
     create: {
-      email: 'trainer@test.com',
+      email: data.email,
       passwordHash,
-      firstName: 'Sasa',
-      lastName: 'Jovanovic',
-      phone: '0600000000',
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phone: data.phone,
       role: UserRole.TRAINER,
     },
   });
+}
 
-  await prisma.booking.deleteMany();
-  await prisma.clientPackage.deleteMany();
-  await prisma.package.deleteMany();
+async function main() {
+  const trainer1Password =
+    process.env.SEED_TRAINER_1_PASSWORD;
+
+  const trainer2Password =
+    process.env.SEED_TRAINER_2_PASSWORD;
+
+  const trainer3Password =
+    process.env.SEED_TRAINER_3_PASSWORD;
+
+  if (!trainer1Password || !trainer2Password || !trainer3Password) {
+    throw new Error(
+      'Missing trainer seed passwords in environment variables'
+    );
+  }
+
+  const trainer1 = await upsertTrainer({
+    email: 'sasajovanovic998@gmail.com',
+    password: trainer1Password,
+    firstName: 'Sasa',
+    lastName: 'Jovanovic',
+    phone: '0612031119',
+  });
+
+  const trainer2 = await upsertTrainer({
+    email: 'vukasin.bunjevac@gmail.com',
+    password: trainer2Password,
+    firstName: 'Vukasin',
+    lastName: 'Bunjevac',
+    phone: '0691338861',
+  });
+
+  const trainer3 = await upsertTrainer({
+    email: 'vukpejic4@gmail.com',
+    password: trainer3Password,
+    firstName: 'Vukoman',
+    lastName: 'Pejic',
+    phone: '0600660206',
+  });
 
   const packages = [
     {
@@ -44,12 +87,22 @@ async function main() {
     },
   ];
 
-  await prisma.package.createMany({
-    data: packages,
-  });
+  for (const pkg of packages) {
+    await prisma.package.upsert({
+      where: {
+        name: pkg.name,
+      },
+      update: {
+        sessionCount: pkg.sessionCount,
+      },
+      create: pkg,
+    });
+  }
 
   console.log('Seed complete');
-  console.log('Trainer:', trainer.email);
+  console.log('Trainer 1:', trainer1.email);
+  console.log('Trainer 2:', trainer2.email);
+  console.log('Trainer 3:', trainer3.email);
 }
 
 main()
