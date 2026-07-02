@@ -5,6 +5,12 @@
   "references": [
     {
       "path": "./web"
+    },
+    {
+      "path": "./api-e2e"
+    },
+    {
+      "path": "./api"
     }
   ]
 }
