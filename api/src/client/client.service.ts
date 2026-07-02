@@ -473,26 +473,6 @@ export class ClientService {
     };
   }
 
-    const { weekStart, weekEnd } =
-      this.getNextWeekRange();
-
-    const clientBookingsThisWeek =
-      bookings.filter(
-        (booking) =>
-          booking.clientId === profile.id &&
-          booking.startAt >= weekStart &&
-          booking.startAt <= weekEnd
-      ).length;
-
-    return {
-      weekStart: currentWeekStart,
-      weekEnd: nextWeekEnd,
-      maxBookingsPerWeek: 3,
-      clientBookingsThisWeek,
-      days,
-    };
-  }
-
   async bookSession(
     userId: string,
     startAtIso: string
