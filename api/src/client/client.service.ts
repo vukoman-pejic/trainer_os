@@ -46,6 +46,14 @@ export class ClientService {
     }).setZone(APP_TIME_ZONE);
   }
 
+  private formatBelgradeDateTime(date: Date) {
+    return DateTime.fromJSDate(date, {
+      zone: 'utc',
+    })
+      .setZone(APP_TIME_ZONE)
+      .toFormat('dd.MM.yyyy. HH:mm');
+  }
+
   private getSlotCapacity(date: Date) {
     const hour = this.toBelgradeDateTime(date).hour;
 
@@ -637,7 +645,7 @@ export class ClientService {
             profile.trainerId,
             NotificationType.CLIENT_BOOKED,
             'New Session Booked',
-            `${profile.user.firstName} ${profile.user.lastName} booked a session at ${startAt.toLocaleString()}`
+            `${booking.client.user.firstName} ${booking.client.user.lastName} cancelled a session on ${this.formatBelgradeDateTime(booking.startAt)}`
           );
 
           await tx.clientPackage.update({
@@ -765,7 +773,7 @@ export class ClientService {
           booking.client.trainerId,
           NotificationType.CLIENT_CANCELLED,
           'Session Cancelled',
-          `${booking.client.user.firstName} ${booking.client.user.lastName} cancelled a session on ${booking.startAt.toLocaleString()}`
+          `${booking.client.user.firstName} ${booking.client.user.lastName} cancelled a session on ${this.formatBelgradeDateTime(booking.startAt)}`
         );
         await this.notifyAvailableSlot(
           tx,
@@ -1006,7 +1014,7 @@ export class ClientService {
                 type:
                   NotificationType.LATE_RESCHEDULE_REQUEST,
                 title: 'Late Session Approval',
-                message: `${booking.client.user.firstName} ${booking.client.user.lastName} requested reschedule to ${newStartAt.toLocaleString()}`,
+                message: `${booking.client.user.firstName} ${booking.client.user.lastName} requested reschedule to ${this.formatBelgradeDateTime(newStartAt)}`,
               },
             });
 
@@ -1034,7 +1042,7 @@ export class ClientService {
             booking.client.trainerId,
             NotificationType.CLIENT_RESCHEDULED,
             'Session Rescheduled',
-            `${booking.client.user.firstName} ${booking.client.user.lastName} rescheduled from ${oldStartAt.toLocaleString()} to ${newStartAt.toLocaleString()}`
+            `${booking.client.user.firstName} ${booking.client.user.lastName} rescheduled from ${this.formatBelgradeDateTime(oldStartAt)} to ${this.formatBelgradeDateTime(newStartAt)}`
           );
 
           await this.notifyAvailableSlot(
@@ -1191,7 +1199,7 @@ export class ClientService {
         type:
           NotificationType.SLOT_AVAILABLE,
         title: 'Spot Available',
-        message: `A session at ${freedStartAt.toLocaleString()} just became available.`,
+        message: `A session at ${this.formatBelgradeDateTime(freedStartAt)} just became available.`,
       });
     }
 
