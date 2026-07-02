@@ -16,6 +16,7 @@ import { Card } from '../../../../components/ui/card';
 import { apiFetch } from '../../../../lib/api';
 import { useAuthGuard } from '../../../../hooks/use-auth-guard';
 import { Button } from '../../../../components/ui/button';
+import { DateTime } from 'luxon';
 
 type ClientDetails = {
   id: string;
@@ -87,6 +88,16 @@ const SLOT_OPTIONS = [
   '20:00',
   '21:00',
 ];
+
+const APP_TIME_ZONE = 'Europe/Belgrade';
+
+function toUtcIso(date: string, time: string) {
+  return DateTime.fromISO(`${date}T${time}`, {
+    zone: APP_TIME_ZONE,
+  })
+    .toUTC()
+    .toISO();
+}
 
 export default function ClientDetailsPage() {
   const authorized = useAuthGuard({
@@ -258,8 +269,7 @@ export default function ClientDetailsPage() {
     try {
       setBookingLoading(true);
 
-      const isoDate =
-        `${selectedDate}T${selectedTime}:00`;
+      const isoDate = toUtcIso(selectedDate, selectedTime);
 
       await apiFetch('/bookings', {
         method: 'POST',
@@ -314,8 +324,7 @@ export default function ClientDetailsPage() {
     try {
       setRescheduleLoading(true);
 
-      const isoDate =
-        `${rescheduleDate}T${rescheduleTime}:00`;
+      const isoDate = toUtcIso(rescheduleDate, rescheduleTime);
 
       await apiFetch(
         `/bookings/${rescheduleBookingId}/reschedule`,
@@ -468,13 +477,11 @@ export default function ClientDetailsPage() {
   }
 
   function formatBookingDate(date: string) {
-    return new Intl.DateTimeFormat('sr-RS', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date));
+    return DateTime.fromISO(date, {
+      zone: 'utc',
+    })
+      .setZone(APP_TIME_ZONE)
+      .toFormat('dd.MM.yyyy. HH:mm');
   }
 
   useEffect(() => {

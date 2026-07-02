@@ -10,6 +10,7 @@ import { ClientLayout } from '../../../components/layouts/client-layout';
 import { Card } from '../../../components/ui/card';
 import { apiFetch } from '../../../lib/api';
 import { useAuthGuard } from '../../../hooks/use-auth-guard';
+import { DateTime } from 'luxon';
 
 type DashboardData = {
   activePackage?: {
@@ -34,6 +35,8 @@ type DashboardData = {
   recentPastSessions: any[];
 };
 
+const APP_TIME_ZONE = 'Europe/Belgrade';
+
 export default function ClientDashboardPage() {
   const authorized = useAuthGuard({
     requiredRole: 'CLIENT',
@@ -54,13 +57,11 @@ export default function ClientDashboardPage() {
   }
 
   function formatDate(date: string) {
-    return new Intl.DateTimeFormat('sr-RS', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date));
+    return DateTime.fromISO(date, {
+      zone: 'utc',
+    })
+      .setZone(APP_TIME_ZONE)
+      .toFormat('dd.MM.yyyy. HH:mm');
   }
 
   useEffect(() => {

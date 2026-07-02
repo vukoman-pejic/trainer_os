@@ -13,6 +13,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { useAuthGuard } from '../../hooks/use-auth-guard';
 import { apiFetch } from '../../lib/api';
+import { DateTime } from 'luxon';
 
 type Session = {
   id: string;
@@ -33,6 +34,8 @@ type DashboardData = {
   upcomingThisWeek: number;
 };
 
+const APP_TIME_ZONE = 'Europe/Belgrade';
+
 export default function DashboardPage() {
   const authorized = useAuthGuard({
     requiredRole: 'TRAINER',
@@ -45,10 +48,11 @@ export default function DashboardPage() {
     useState(true);
 
   function formatTime(date: string) {
-    return new Intl.DateTimeFormat('sr-RS', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date));
+    return DateTime.fromISO(date, {
+      zone: 'utc',
+    })
+      .setZone(APP_TIME_ZONE)
+      .toFormat('HH:mm');
   }
 
   async function loadDashboard() {

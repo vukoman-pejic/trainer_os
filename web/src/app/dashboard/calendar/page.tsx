@@ -12,6 +12,7 @@ import { Card } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { apiFetch } from '../../../lib/api';
 import { useAuthGuard } from '../../../hooks/use-auth-guard';
+import { DateTime } from 'luxon';
 
 type Workout = {
   id: string;
@@ -66,6 +67,16 @@ const DAYS = [
   'Sunday',
 ];
 
+const APP_TIME_ZONE = 'Europe/Belgrade';
+
+function toUtcIso(date: string, time: string) {
+  return DateTime.fromISO(`${date}T${time}`, {
+    zone: APP_TIME_ZONE,
+  })
+    .toUTC()
+    .toISO();
+}
+
 export default function CalendarPage() {
   const authorized = useAuthGuard({
     requiredRole: 'TRAINER',
@@ -118,19 +129,23 @@ export default function CalendarPage() {
   }
 
   function formatHeaderDate(date: string) {
-    return new Intl.DateTimeFormat('sr-RS', {
-      day: '2-digit',
-      month: '2-digit',
-    }).format(new Date(date));
+    return DateTime.fromISO(date, {
+      zone: 'utc',
+    })
+      .setZone(APP_TIME_ZONE)
+      .toFormat('dd.MM');
   }
 
   function getDayDate(index: number) {
-    if (!calendar) return new Date();
+    if (!calendar) {
+      return DateTime.now().setZone(APP_TIME_ZONE);
+    }
 
-    const date = new Date(calendar.weekStart);
-    date.setDate(date.getDate() + index);
-
-    return date;
+    return DateTime.fromISO(calendar.weekStart, {
+      zone: 'utc',
+    })
+      .setZone(APP_TIME_ZONE)
+      .plus({ days: index });
   }
 
   function getSessionsForSlot(
@@ -142,42 +157,30 @@ export default function CalendarPage() {
     const [hours, minutes] =
       timeSlot.split(':').map(Number);
 
-    return calendar.sessions.filter(
-      (session) => {
-        const sessionDate = new Date(
-          session.startAt
-        );
+    const targetDate = getDayDate(dayIndex);
 
-        const targetDate =
-          getDayDate(dayIndex);
+    return calendar.sessions.filter((session) => {
+      const sessionDate = DateTime.fromISO(session.startAt, {
+        zone: 'utc',
+      }).setZone(APP_TIME_ZONE);
 
-        return (
-          sessionDate.getDate() ===
-            targetDate.getDate() &&
-          sessionDate.getMonth() ===
-            targetDate.getMonth() &&
-          sessionDate.getFullYear() ===
-            targetDate.getFullYear() &&
-          sessionDate.getHours() ===
-            hours &&
-          sessionDate.getMinutes() ===
-            minutes
-        );
-      }
-    );
+      return (
+        sessionDate.year === targetDate.year &&
+        sessionDate.month === targetDate.month &&
+        sessionDate.day === targetDate.day &&
+        sessionDate.hour === hours &&
+        sessionDate.minute === minutes
+      );
+    });
   }
 
-  function getNextDayFromBooking(
-    bookingDate: string
-  ) {
-    const nextDay = new Date(bookingDate);
-    nextDay.setDate(
-      nextDay.getDate() + 1
-    );
-
-    return nextDay
-      .toISOString()
-      .split('T')[0];
+  function getNextDayFromBooking(bookingDate: string) {
+    return DateTime.fromISO(bookingDate, {
+      zone: 'utc',
+    })
+      .setZone(APP_TIME_ZONE)
+      .plus({ days: 1 })
+      .toFormat('yyyy-MM-dd');
   }
 
   async function cancelBooking() {
@@ -223,8 +226,7 @@ export default function CalendarPage() {
         {
           method: 'PATCH',
           body: JSON.stringify({
-            startAt:
-              `${rescheduleDate}T${rescheduleTime}:00`,
+            startAt: toUtcIso(rescheduleDate, rescheduleTime),
           }),
         }
       );
@@ -356,9 +358,7 @@ export default function CalendarPage() {
               </p>
 
               <p className="mt-1 text-sm text-slate-400">
-                {formatHeaderDate(
-                  getDayDate(index).toISOString()
-                )}
+                {getDayDate(index).toFormat('dd.MM')}
               </p>
             </Card>
           ))}

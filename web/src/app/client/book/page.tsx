@@ -9,6 +9,7 @@ import { Card } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
 import { apiFetch } from '../../../lib/api';
 import { useAuthGuard } from '../../../hooks/use-auth-guard';
+import { DateTime } from 'luxon';
 
 type Slot = {
   startAt: string;
@@ -39,6 +40,14 @@ type PopupMode =
   | 'book'
   | 'manage'
   | 'reschedule';
+
+const APP_TIME_ZONE = 'Europe/Belgrade';
+
+function getSlotDateTime(startAt: string) {
+  return DateTime.fromISO(startAt, {
+    zone: 'utc',
+  }).setZone(APP_TIME_ZONE);
+}
 
 export default function ClientBookPage() {
   const authorized = useAuthGuard({
@@ -170,11 +179,11 @@ export default function ClientBookPage() {
   }
 
   function formatDay(date: string) {
-    return new Intl.DateTimeFormat('sr-RS', {
-      weekday: 'short',
-      day: '2-digit',
-      month: '2-digit',
-    }).format(new Date(date));
+    return DateTime.fromISO(date, {
+      zone: 'utc',
+    })
+      .setZone(APP_TIME_ZONE)
+      .toFormat('ccc dd.MM');
   }
 
   useEffect(() => {
@@ -285,21 +294,13 @@ export default function ClientBookPage() {
               <div className="space-y-3">
                 {day.slots
                   .filter((slot) => {
-                    const date = new Date(
-                      slot.startAt
-                    );
+                    const date = getSlotDateTime(slot.startAt);
 
-                    const dayOfWeek =
-                      date.getDay();
-
-                    const hour =
-                      date.getHours();
+                    const dayOfWeek = date.weekday;
+                    const hour = date.hour;
 
                     if (dayOfWeek === 6) {
-                      return (
-                        hour >= 8 &&
-                        hour <= 11
-                      );
+                      return hour >= 8 && hour <= 11;
                     }
 
                     return true;
@@ -322,7 +323,7 @@ export default function ClientBookPage() {
                     }`}
                   >
                     <p className="font-semibold">
-                      {slot.time}
+                      {getSlotDateTime(slot.startAt).toFormat('HH:mm')}
                     </p>
 
                     <p className="mt-1 text-xs text-slate-400">
@@ -446,21 +447,13 @@ export default function ClientBookPage() {
                       <div className="space-y-3">
                         {day.slots
                           .filter((slot) => {
-                            const date = new Date(
-                              slot.startAt
-                            );
+                            const date = getSlotDateTime(slot.startAt);
 
-                            const dayOfWeek =
-                              date.getDay();
-
-                            const hour =
-                              date.getHours();
+                            const dayOfWeek = date.weekday;
+                            const hour = date.hour;
 
                             if (dayOfWeek === 6) {
-                              return (
-                                hour >= 8 &&
-                                hour <= 11
-                              );
+                              return hour >= 8 && hour <= 11;
                             }
 
                             return true;

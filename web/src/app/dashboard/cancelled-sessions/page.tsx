@@ -6,6 +6,7 @@ import { Card } from '../../../components/ui/card';
 import { apiFetch } from '../../../lib/api';
 import { useAuthGuard } from '../../../hooks/use-auth-guard';
 import { Button } from '../../../components/ui/button';
+import { DateTime } from 'luxon';
 
 type CancelledSession = {
   id: string;
@@ -24,6 +25,8 @@ type CancelledSession = {
     };
   };
 };
+
+const APP_TIME_ZONE = 'Europe/Belgrade';
 
 export default function CancelledSessionsPage() {
   const authorized = useAuthGuard({
@@ -61,10 +64,11 @@ export default function CancelledSessionsPage() {
   }
 
   function formatDate(date: string) {
-    return new Intl.DateTimeFormat('sr-RS', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(new Date(date));
+    return DateTime.fromISO(date, {
+      zone: 'utc',
+    })
+      .setZone(APP_TIME_ZONE)
+      .toFormat('dd.MM.yyyy. HH:mm');
   }
 
   useEffect(() => {
