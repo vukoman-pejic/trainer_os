@@ -34,8 +34,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
       - name: Format check
         run: pnpm exec nx format:check --base="remotes/origin/main"
 
-      - name: Build and typecheck
-        run: pnpm exec nx run-many -t build typecheck --exclude=api-e2e
+      - name: Typecheck API
+        run: pnpm exec nx run api:typecheck
+
+      - name: Build
+        run: pnpm exec nx run-many -t build --exclude=api-e2e
