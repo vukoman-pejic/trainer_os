@@ -5,6 +5,7 @@
   "scripts": {
     "seed": "tsx prisma/seed.ts"
   },
+  "packageManager": "pnpm@10.0.0",
   "private": true,
   "devDependencies": {
     "@nestjs/schematics": "^11.0.0",

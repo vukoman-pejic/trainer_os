@@ -1,11 +1,11 @@
 [phases.setup]
-nixPkgs = ["nodejs_24"]
+nixPkgs = ["nodejs_24", "pnpm"]
 
 [phases.install]
-cmds = ["npm ci --include=dev"]
+cmds = ["pnpm install --frozen-lockfile"]
 
 [phases.build]
-cmds = ["npx prisma generate", "npx nx build api"]
+cmds = ["pnpm prisma generate", "pnpm exec nx build api"]
 
 [start]
 cmd = "node dist/api/main.js"
