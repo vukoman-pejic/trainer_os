@@ -117,25 +117,25 @@ export default function ClientProfilePage() {
 
   return (
     <ClientLayout>
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-3xl font-bold md:text-4xl">
           Profile
         </h1>
 
-        <p className="mt-2 text-slate-400">
+        <p className="mt-2 text-sm text-slate-400 md:text-base">
           Manage your personal details
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h2 className="mb-6 text-xl font-semibold">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+        <Card className="p-5 md:p-6">
+          <h2 className="mb-5 text-lg font-semibold md:mb-6 md:text-xl">
             Personal Information
           </h2>
 
           <div className="space-y-5">
             <div>
-              <p className="mb-2 text-slate-400">
+              <p className="mb-2 text-sm text-slate-400 md:text-base">
                 Full Name
               </p>
 
@@ -146,16 +146,18 @@ export default function ClientProfilePage() {
             </div>
 
             <div>
-              <div className="mb-2 flex items-center gap-2 text-slate-400">
+              <div className="mb-2 flex items-center gap-2 text-sm text-slate-400 md:text-base">
                 <Mail size={16} />
                 Email
               </div>
 
-              <p>{profile.user.email}</p>
+              <p className="break-words text-sm md:text-base">
+                {profile.user.email}
+              </p>
             </div>
 
             <div>
-              <div className="mb-2 flex items-center gap-2 text-slate-400">
+              <div className="mb-2 flex items-center gap-2 text-sm text-slate-400 md:text-base">
                 <Phone size={16} />
                 Phone
               </div>
@@ -170,14 +172,14 @@ export default function ClientProfilePage() {
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h2 className="mb-6 text-xl font-semibold">
+        <Card className="p-5 md:p-6">
+          <h2 className="mb-5 text-lg font-semibold md:mb-6 md:text-xl">
             Fitness Profile
           </h2>
 
           <div className="space-y-5">
             <div>
-              <div className="mb-2 flex items-center gap-2 text-slate-400">
+              <div className="mb-2 flex items-center gap-2 text-sm text-slate-400 md:text-base">
                 <Target size={16} />
                 Goals
               </div>
@@ -188,12 +190,12 @@ export default function ClientProfilePage() {
                   setGoals(e.target.value)
                 }
                 rows={4}
-                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm outline-none focus:border-violet-500/50 md:text-base"
               />
             </div>
 
             <div>
-              <div className="mb-2 flex items-center gap-2 text-slate-400">
+              <div className="mb-2 flex items-center gap-2 text-sm text-slate-400 md:text-base">
                 <HeartPulse size={16} />
                 Injuries
               </div>
@@ -206,7 +208,7 @@ export default function ClientProfilePage() {
                   )
                 }
                 rows={4}
-                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm outline-none focus:border-violet-500/50 md:text-base"
               />
             </div>
 
@@ -223,19 +225,19 @@ export default function ClientProfilePage() {
         </Card>
       </div>
 
-      <div className="mt-8">
-        <Card className="p-6">
-          <h2 className="mb-6 text-xl font-semibold">
+      <div className="mt-6 md:mt-8">
+        <Card className="p-5 md:p-6">
+          <h2 className="mb-5 text-lg font-semibold md:mb-6 md:text-xl">
             Trainer Notes
           </h2>
 
           <div className="flex items-start gap-3">
             <StickyNote
               size={18}
-              className="mt-1 text-slate-400"
+              className="mt-1 shrink-0 text-slate-400"
             />
 
-            <p className="text-slate-300">
+            <p className="break-words text-sm leading-relaxed text-slate-300 md:text-base">
               {profile.notes ||
                 'No notes from your trainer'}
             </p>

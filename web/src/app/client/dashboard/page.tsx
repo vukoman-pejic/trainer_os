@@ -95,7 +95,7 @@ export default function ClientDashboardPage() {
   return (
     <ClientLayout>
       <div className="mb-8">
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-3xl font-bold md:text-4xl">
           Dashboard
         </h1>
 
@@ -122,7 +122,7 @@ export default function ClientDashboardPage() {
           </Card>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card className="p-6">
           <Calendar size={24} />
 

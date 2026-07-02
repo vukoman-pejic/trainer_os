@@ -86,90 +86,79 @@ export default function ClientSessionsPage() {
 
   return (
     <ClientLayout>
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-3xl font-bold md:text-4xl">
           My Sessions
         </h1>
 
-        <p className="mt-2 text-slate-400">
-          Your upcoming and completed
-          training sessions
+        <p className="mt-2 text-sm leading-relaxed text-slate-400 md:text-base">
+          Your upcoming and completed training sessions
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h2 className="mb-6 text-xl font-semibold">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+        <Card className="p-5 md:p-6">
+          <h2 className="mb-5 text-lg font-semibold md:mb-6 md:text-xl">
             Upcoming Sessions
           </h2>
 
           <div className="space-y-3">
-            {sessions.upcomingSessions
-              .length === 0 ? (
-              <p className="text-slate-400">
+            {sessions.upcomingSessions.length === 0 ? (
+              <p className="text-sm text-slate-400 md:text-base">
                 No upcoming sessions
               </p>
             ) : (
-              sessions.upcomingSessions.map(
-                (session) => (
-                  <div
-                    key={session.id}
-                    className="rounded-xl border border-white/10 p-4"
-                  >
-                    <p className="font-semibold">
-                      {formatDate(
-                        session.startAt
-                      )}
-                    </p>
+              sessions.upcomingSessions.map((session) => (
+                <div
+                  key={session.id}
+                  className="rounded-xl border border-white/10 p-4"
+                >
+                  <p className="font-semibold leading-snug">
+                    {formatDate(session.startAt)}
+                  </p>
 
-                    <p className="mt-2 text-sm text-slate-400">
-                      {session.status}
-                    </p>
+                  <p className="mt-2 inline-flex rounded-full border border-white/10 px-2 py-1 text-xs text-slate-400">
+                    {session.status}
+                  </p>
 
-                    <p className="mt-2 text-sm text-violet-300">
-                      {session.workoutTemplate
-                        ? `${session.workoutTemplate.name} (${session.workoutTemplate.type})`
-                        : 'No workout assigned'}
-                    </p>
-                  </div>
-                )
-              )
+                  <p className="mt-3 break-words text-sm leading-relaxed text-violet-300">
+                    {session.workoutTemplate
+                      ? `${session.workoutTemplate.name} (${session.workoutTemplate.type})`
+                      : 'No workout assigned'}
+                  </p>
+                </div>
+              ))
             )}
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h2 className="mb-6 text-xl font-semibold">
+        <Card className="p-5 md:p-6">
+          <h2 className="mb-5 text-lg font-semibold md:mb-6 md:text-xl">
             Past Sessions
           </h2>
 
           <div className="space-y-3">
-            {sessions.pastSessions
-              .length === 0 ? (
-              <p className="text-slate-400">
+            {sessions.pastSessions.length === 0 ? (
+              <p className="text-sm text-slate-400 md:text-base">
                 No past sessions
               </p>
             ) : (
-              sessions.pastSessions.map(
-                (session) => (
-                  <div
-                    key={session.id}
-                    className="rounded-xl border border-white/10 p-4"
-                  >
-                    <p className="font-semibold">
-                      {formatDate(
-                        session.startAt
-                      )}
-                    </p>
+              sessions.pastSessions.map((session) => (
+                <div
+                  key={session.id}
+                  className="rounded-xl border border-white/10 p-4"
+                >
+                  <p className="font-semibold leading-snug">
+                    {formatDate(session.startAt)}
+                  </p>
 
-                    <p className="mt-2 text-sm text-violet-300">
-                      {session.workoutTemplate
-                        ? `${session.workoutTemplate.name} (${session.workoutTemplate.type})`
-                        : 'No workout assigned'}
-                    </p>
-                  </div>
-                )
-              )
+                  <p className="mt-3 break-words text-sm leading-relaxed text-violet-300">
+                    {session.workoutTemplate
+                      ? `${session.workoutTemplate.name} (${session.workoutTemplate.type})`
+                      : 'No workout assigned'}
+                  </p>
+                </div>
+              ))
             )}
           </div>
         </Card>

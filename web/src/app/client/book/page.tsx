@@ -180,10 +180,8 @@ export default function ClientBookPage() {
 
   function formatDay(date: string) {
     return DateTime.fromISO(date, {
-      zone: 'utc',
-    })
-      .setZone(APP_TIME_ZONE)
-      .toFormat('ccc dd.MM');
+      zone: APP_TIME_ZONE,
+    }).toFormat('ccc dd.MM');
   }
 
   useEffect(() => {
@@ -225,25 +223,27 @@ export default function ClientBookPage() {
       ? currentWeek
       : nextWeek
   ).filter((day) => {
-    const date = new Date(day.date);
+    const date = DateTime.fromISO(day.date, {
+      zone: APP_TIME_ZONE,
+    });
 
-    return date.getDay() !== 0;
+    return date.weekday !== 7;
   });
 
   return (
     <ClientLayout>
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-3xl font-bold md:text-4xl">
           Calendar
         </h1>
 
-        <p className="mt-2 text-slate-400">
+        <p className="mt-2 text-sm leading-relaxed text-slate-400 md:text-base">
           Bookings are available only for
           next week. Existing bookings can
           be managed anytime.
         </p>
 
-        <p className="text-slate-400">
+        <p className="mt-2 text-sm text-slate-400 md:text-base">
           Booked next week:{' '}
           {
             availability.clientBookingsThisWeek
@@ -252,12 +252,12 @@ export default function ClientBookPage() {
         </p>
       </div>
 
-      <div className="mb-6 flex gap-3">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:flex">
         <button
           onClick={() =>
             setActiveTab('current')
           }
-          className={`rounded-xl px-5 py-3 transition ${
+          className={`rounded-xl px-4 py-3 text-sm transition md:px-5 md:text-base ${
             activeTab === 'current'
               ? 'bg-white/10 text-white'
               : 'bg-black/20 text-slate-400 hover:bg-white/5'
@@ -270,7 +270,7 @@ export default function ClientBookPage() {
           onClick={() =>
             setActiveTab('next')
           }
-          className={`rounded-xl px-5 py-3 transition ${
+          className={`rounded-xl px-4 py-3 text-sm transition md:px-5 md:text-base ${
             activeTab === 'next'
               ? 'bg-white/10 text-white'
               : 'bg-black/20 text-slate-400 hover:bg-white/5'
@@ -280,8 +280,8 @@ export default function ClientBookPage() {
         </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="grid grid-cols-6 gap-4">
+      <div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
           {visibleDays.map((day) => (
             <Card
               key={day.date}
@@ -345,8 +345,8 @@ export default function ClientBookPage() {
 
       {selectedSlot &&
         popupMode === 'book' && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70">
-            <Card className="w-full max-w-md p-6">
+          <div className="fixed inset-0 z-[99999] flex items-end justify-center bg-black/70 p-4 md:items-center">
+            <Card className="w-full max-w-md p-5 md:p-6">
               <h2 className="text-xl font-semibold">
                 Confirm Booking
               </h2>
@@ -381,8 +381,8 @@ export default function ClientBookPage() {
 
       {selectedSlot &&
         popupMode === 'manage' && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70">
-            <Card className="w-full max-w-md p-6">
+          <div className="fixed inset-0 z-[99999] flex items-end justify-center bg-black/70 p-4 md:items-center">
+            <Card className="w-full max-w-md p-5 md:p-6">
               <h2 className="text-xl font-semibold">
                 Manage Session
               </h2>
@@ -427,14 +427,14 @@ export default function ClientBookPage() {
 
       {selectedSlot &&
         popupMode === 'reschedule' && (
-          <div className="fixed inset-0 z-[99999] overflow-auto bg-black/80 p-8">
+          <div className="fixed inset-0 z-[99999] overflow-auto bg-black/80 p-4 md:p-8">
             <div className="mx-auto max-w-7xl">
-              <Card className="p-6">
-                <h2 className="mb-6 text-2xl font-semibold">
+              <Card className="p-5 md:p-6">
+                <h2 className="mb-6 text-xl font-semibold md:text-2xl">
                   Select New Slot
                 </h2>
 
-                <div className="grid grid-cols-6 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
                   {visibleDays.map((day) => (
                     <Card
                       key={day.date}
@@ -461,29 +461,38 @@ export default function ClientBookPage() {
                           .map((slot) => (
                             <button
                               key={slot.startAt}
-                              disabled={
-                                slot.isFull ||
-                                slot.bookedByClient
-                              }
                               onClick={() =>
-                                rescheduleBooking(
-                                  slot
-                                )
+                                handleSlotClick(slot)
                               }
-                              className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-left transition hover:bg-white/5 disabled:opacity-40"
+                              className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition ${
+                                slot.bookedByClient
+                                  ? 'border-violet-500 bg-violet-500/20'
+                                  : !slot.isBookable
+                                  ? 'border-white/10 bg-black/10 opacity-40'
+                                  : slot.isFull
+                                  ? 'border-red-500/20 bg-red-500/10 opacity-60'
+                                  : 'border-white/10 bg-black/20 hover:bg-white/5'
+                              }`}
                             >
-                              <p className="font-semibold">
-                                {
-                                  slot.time
-                                }
-                              </p>
+                              <div>
+                                <p className="font-semibold">
+                                  {getSlotDateTime(slot.startAt).toFormat('HH:mm')}
+                                </p>
 
-                              <p className="mt-1 text-xs text-slate-400">
-                                {
-                                  slot.availableCount
-                                }{' '}
-                                spots
-                              </p>
+                                <p className="mt-1 text-xs text-slate-400">
+                                  {slot.bookedByClient
+                                    ? 'Your booking'
+                                    : !slot.isBookable
+                                    ? 'Current week'
+                                    : slot.isFull
+                                    ? 'Full'
+                                    : `${slot.availableCount} spots left`}
+                                </p>
+                              </div>
+
+                              <span className="rounded-full border border-white/10 px-2 py-1 text-xs text-slate-300">
+                                {slot.bookedCount}/{slot.capacity}
+                              </span>
                             </button>
                           )
                         )}
