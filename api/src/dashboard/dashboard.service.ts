@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
+import { DateTime } from 'luxon';
+
+const APP_TIME_ZONE = 'Europe/Belgrade';
 
 @Injectable()
 export class DashboardService {
@@ -10,48 +13,20 @@ export class DashboardService {
   ) {}
 
   async getTrainerDashboard(_trainerId: string) {
-    const now = new Date();
+    const now = DateTime.now().setZone(APP_TIME_ZONE);
 
-    const todayStart = new Date(now);
-    todayStart.setHours(0, 0, 0, 0);
+    const todayStart = now.startOf('day');
+    const todayEnd = now.endOf('day');
 
-    const todayEnd = new Date(now);
-    todayEnd.setHours(23, 59, 59, 999);
+    const tomorrowStart = now.plus({ days: 1 }).startOf('day');
+    const tomorrowEnd = now.plus({ days: 1 }).endOf('day');
 
-    const tomorrowStart = new Date(now);
-    tomorrowStart.setDate(
-      tomorrowStart.getDate() + 1
-    );
-    tomorrowStart.setHours(0, 0, 0, 0);
+    const weekEnd = now.endOf('week').endOf('day');
 
-    const tomorrowEnd = new Date(now);
-    tomorrowEnd.setDate(
-      tomorrowEnd.getDate() + 1
-    );
-    tomorrowEnd.setHours(
-      23,
-      59,
-      59,
-      999
-    );
-
-    const weekEnd = new Date(now);
-
-    const day = weekEnd.getDay();
-
-    const daysUntilSunday =
-      day === 0 ? 0 : 7 - day;
-
-    weekEnd.setDate(
-      weekEnd.getDate() + daysUntilSunday
-    );
-
-    weekEnd.setHours(
-      23,
-      59,
-      59,
-      999
-    );
+    const activeStatuses = [
+      BookingStatus.CONFIRMED,
+      BookingStatus.RESCHEDULED,
+    ];
 
     const [
       todaySessions,
@@ -62,14 +37,11 @@ export class DashboardService {
       this.prisma.booking.findMany({
         where: {
           status: {
-            in: [
-              BookingStatus.CONFIRMED,
-              BookingStatus.RESCHEDULED,
-            ],
+            in: activeStatuses,
           },
           startAt: {
-            gte: todayStart,
-            lte: todayEnd,
+            gte: todayStart.toUTC().toJSDate(),
+            lte: todayEnd.toUTC().toJSDate(),
           },
         },
         include: {
@@ -88,14 +60,11 @@ export class DashboardService {
       this.prisma.booking.findMany({
         where: {
           status: {
-            in: [
-              BookingStatus.CONFIRMED,
-              BookingStatus.RESCHEDULED,
-            ],
+            in: activeStatuses,
           },
           startAt: {
-            gte: tomorrowStart,
-            lte: tomorrowEnd,
+            gte: tomorrowStart.toUTC().toJSDate(),
+            lte: tomorrowEnd.toUTC().toJSDate(),
           },
         },
         include: {
@@ -116,14 +85,11 @@ export class DashboardService {
       this.prisma.booking.count({
         where: {
           status: {
-            in: [
-              BookingStatus.CONFIRMED,
-              BookingStatus.RESCHEDULED,
-            ],
+            in: activeStatuses,
           },
           startAt: {
-            gte: now,
-            lte: weekEnd,
+            gte: now.toUTC().toJSDate(),
+            lte: weekEnd.toUTC().toJSDate(),
           },
         },
       }),
