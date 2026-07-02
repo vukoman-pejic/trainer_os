@@ -7,13 +7,44 @@ import { ActorType, BookingStatus, NotificationType, Prisma, } from '@prisma/cli
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { SaveWorkoutLogDto } from './dto/save-workout-log.dto';
+import { DateTime } from 'luxon';
+
+const APP_TIME_ZONE = 'Europe/Belgrade';
 
 @Injectable()
 export class BookingsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private toBelgradeDateTime(date: Date) {
+    return DateTime.fromJSDate(date, {
+      zone: 'utc',
+    }).setZone(APP_TIME_ZONE);
+  }
+
+  private getBelgradeDayRange(date: Date) {
+    const belgradeDate =
+      this.toBelgradeDateTime(date);
+
+    return {
+      dayStart: belgradeDate
+        .startOf('day')
+        .toUTC()
+        .toJSDate(),
+      dayEnd: belgradeDate
+        .endOf('day')
+        .toUTC()
+        .toJSDate(),
+    };
+  }
+
+  private formatBelgradeDateTime(date: Date) {
+    return this.toBelgradeDateTime(date).toFormat(
+      'dd.MM.yyyy. HH:mm'
+    );
+  }
+
   private getSlotCapacity(date: Date) {
-    const hour = date.getHours();
+    const hour = this.toBelgradeDateTime(date).hour;
 
     if (hour === 9 || hour === 11) {
       return 1;
@@ -23,12 +54,27 @@ export class BookingsService {
   }
 
   private validateSlot(startAt: Date) {
-    const hour = startAt.getHours();
-    const minutes = startAt.getMinutes();
+    const belgradeDate =
+      this.toBelgradeDateTime(startAt);
 
-    const allowedHours = [
+    const day = belgradeDate.weekday % 7;
+    const hour = belgradeDate.hour;
+    const minutes = belgradeDate.minute;
+
+    if (day === 0) {
+      throw new BadRequestException(
+        'Studio is closed on Sundays'
+      );
+    }
+
+    const weekdayHours = [
       8, 9, 10, 11, 16, 17, 18, 19, 20, 21,
     ];
+
+    const saturdayHours = [8, 9, 10, 11];
+
+    const allowedHours =
+      day === 6 ? saturdayHours : weekdayHours;
 
     if (
       minutes !== 0 ||
@@ -55,11 +101,8 @@ export class BookingsService {
 
     this.validateSlot(startAt);
 
-    const dayStart = new Date(startAt);
-    dayStart.setHours(0, 0, 0, 0);
-
-    const dayEnd = new Date(startAt);
-    dayEnd.setHours(23, 59, 59, 999);
+    const { dayStart, dayEnd } =
+      this.getBelgradeDayRange(startAt);
 
     const existingClientBooking =
       await this.prisma.booking.findFirst({
@@ -123,8 +166,11 @@ export class BookingsService {
 
   async create(dto: CreateBookingDto) {
     const startAt = new Date(dto.startAt);
-    const endAt = new Date(startAt);
-    endAt.setHours(endAt.getHours() + 1);
+    const endAt = DateTime.fromJSDate(startAt, {
+      zone: 'utc',
+    })
+      .plus({ hours: 1 })
+      .toJSDate();
 
     const client =
       await this.prisma.clientProfile.findUnique({
@@ -256,7 +302,7 @@ export class BookingsService {
         booking.client.userId,
         NotificationType.TRAINER_CANCELLED,
         'Session Cancelled',
-        `Your trainer cancelled your session scheduled for ${booking.startAt.toLocaleString()}`
+        `Your trainer cancelled your session scheduled for ${this.formatBelgradeDateTime(booking.startAt)}`
       );
 
       return tx.booking.update({
@@ -317,8 +363,11 @@ export class BookingsService {
     }
 
     const startAt = new Date(startAtIso);
-    const endAt = new Date(startAt);
-    endAt.setHours(endAt.getHours() + 1);
+    const endAt = DateTime.fromJSDate(startAt, {
+      zone: 'utc',
+    })
+      .plus({ hours: 1 })
+      .toJSDate();
 
     await this.validateBookingRules(
       booking.clientId,
@@ -333,7 +382,7 @@ export class BookingsService {
           booking.client.userId,
           NotificationType.TRAINER_RESCHEDULED,
           'Session Rescheduled',
-          `Your trainer moved your session from ${oldStartAt.toLocaleString()} to ${startAt.toLocaleString()}`
+          `Your trainer moved your session from ${this.formatBelgradeDateTime(oldStartAt)} to ${this.formatBelgradeDateTime(startAt)}`
         );
 
         return tx.booking.update({
@@ -571,7 +620,7 @@ export class BookingsService {
               NotificationType.REQUEST_APPROVED,
             title:
               'Late Session Approved',
-            message: `Your trainer approved your 21:00 session request for ${booking.startAt.toLocaleString()}`,
+            message: `Your trainer approved your 21:00 session request for ${this.formatBelgradeDateTime(booking.requestedStartAt)}`,
           },
         });
 

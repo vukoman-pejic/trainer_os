@@ -11,6 +11,9 @@ import {
   NotificationType
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { DateTime } from 'luxon';
+
+const APP_TIME_ZONE = 'Europe/Belgrade';
 
 @Injectable()
 export class ClientService {
@@ -29,8 +32,22 @@ export class ClientService {
     '21:00',
   ];
 
+  private createBelgradeDate(date: string, time: string) {
+    return DateTime.fromISO(`${date}T${time}`, {
+      zone: APP_TIME_ZONE,
+    })
+      .toUTC()
+      .toJSDate();
+  }
+
+  private toBelgradeDateTime(date: Date) {
+    return DateTime.fromJSDate(date, {
+      zone: 'utc',
+    }).setZone(APP_TIME_ZONE);
+  }
+
   private getSlotCapacity(date: Date) {
-    const hour = date.getHours();
+    const hour = this.toBelgradeDateTime(date).hour;
 
     if (hour === 9 || hour === 11) {
       return 1;
@@ -40,7 +57,9 @@ export class ClientService {
   }
 
   private validateSlot(startAt: Date) {
-    const day = startAt.getDay();
+    const belgradeDate = this.toBelgradeDateTime(startAt);
+
+    const day = belgradeDate.weekday % 7;
 
     if (day === 0) {
       throw new BadRequestException(
@@ -48,9 +67,8 @@ export class ClientService {
       );
     }
 
-    const hour = startAt.getHours();
-    const minutes =
-      startAt.getMinutes();
+    const hour = belgradeDate.hour;
+    const minutes = belgradeDate.minute;
 
     const weekdayHours = [
       8,
@@ -88,72 +106,37 @@ export class ClientService {
   }
 
   private getAvailabilityRange() {
-    const today = new Date();
+    const today = DateTime.now().setZone(APP_TIME_ZONE);
 
-    const currentDay = today.getDay();
+    const currentWeekStart = today
+      .startOf('week')
+      .startOf('day');
 
-    const mondayOffset =
-      currentDay === 0
-        ? -6
-        : 1 - currentDay;
-
-    const currentWeekStart = new Date(today);
-    currentWeekStart.setDate(
-      today.getDate() + mondayOffset
-    );
-    currentWeekStart.setHours(0, 0, 0, 0);
-
-    const nextWeekEnd = new Date(
-      currentWeekStart
-    );
-    nextWeekEnd.setDate(
-      currentWeekStart.getDate() + 13
-    );
-    nextWeekEnd.setHours(
-      23,
-      59,
-      59,
-      999
-    );
+    const nextWeekEnd = currentWeekStart
+      .plus({ days: 13 })
+      .endOf('day');
 
     return {
-      currentWeekStart,
-      nextWeekEnd,
+      currentWeekStart: currentWeekStart.toUTC().toJSDate(),
+      nextWeekEnd: nextWeekEnd.toUTC().toJSDate(),
     };
   }
 
   private getNextWeekRange() {
-    const today = new Date();
+    const today = DateTime.now().setZone(APP_TIME_ZONE);
 
-    const currentDay = today.getDay();
+    const weekStart = today
+      .startOf('week')
+      .plus({ weeks: 1 })
+      .startOf('day');
 
-    const mondayOffset =
-      currentDay === 0 ? 1 : 8 - currentDay;
-
-    const weekStart = new Date(today);
-
-    weekStart.setDate(
-      today.getDate() + mondayOffset
-    );
-
-    weekStart.setHours(0, 0, 0, 0);
-
-    const weekEnd = new Date(weekStart);
-
-    weekEnd.setDate(
-      weekStart.getDate() + 6
-    );
-
-    weekEnd.setHours(
-      23,
-      59,
-      59,
-      999
-    );
+    const weekEnd = weekStart
+      .plus({ days: 6 })
+      .endOf('day');
 
     return {
-      weekStart,
-      weekEnd,
+      weekStart: weekStart.toUTC().toJSDate(),
+      weekEnd: weekEnd.toUTC().toJSDate(),
     };
   }
 
@@ -389,6 +372,9 @@ export class ClientService {
       nextWeekEnd,
     } = this.getAvailabilityRange();
 
+    const { weekStart, weekEnd } =
+      this.getNextWeekRange();
+
     const bookings =
       await this.prisma.booking.findMany({
         where: {
@@ -410,28 +396,23 @@ export class ClientService {
         },
       });
 
+    const currentWeekStartBelgrade =
+      DateTime.fromJSDate(currentWeekStart, {
+        zone: 'utc',
+      }).setZone(APP_TIME_ZONE);
+
     const days = Array.from(
       { length: 14 },
       (_, dayIndex) => {
-        const date = new Date(currentWeekStart);
-        date.setDate(
-          currentWeekStart.getDate() + dayIndex
-        );
+        const dayDate = currentWeekStartBelgrade
+          .plus({ days: dayIndex })
+          .toFormat('yyyy-MM-dd');
 
         return {
-          date,
+          date: dayDate,
           slots: this.slots.map((slot) => {
-            const [hour, minute] = slot
-              .split(':')
-              .map(Number);
-
-            const startAt = new Date(date);
-            startAt.setHours(
-              hour,
-              minute,
-              0,
-              0
-            );
+            const startAt =
+              this.createBelgradeDate(dayDate, slot);
 
             const capacity =
               this.getSlotCapacity(startAt);
@@ -468,13 +449,29 @@ export class ClientService {
               clientBookingId:
                 clientBooking?.id || null,
               isBookable:
-                startAt >=
-                this.getNextWeekRange().weekStart,
+                startAt >= weekStart,
             };
           }),
         };
       }
     );
+
+    const clientBookingsThisWeek =
+      bookings.filter(
+        (booking) =>
+          booking.clientId === profile.id &&
+          booking.startAt >= weekStart &&
+          booking.startAt <= weekEnd
+      ).length;
+
+    return {
+      weekStart: currentWeekStart,
+      weekEnd: nextWeekEnd,
+      maxBookingsPerWeek: 3,
+      clientBookingsThisWeek,
+      days,
+    };
+  }
 
     const { weekStart, weekEnd } =
       this.getNextWeekRange();
@@ -1007,7 +1004,7 @@ export class ClientService {
           }
 
           const requiresApproval =
-            newStartAt.getHours() === 21;
+            this.toBelgradeDateTime(newStartAt).hour === 21;
 
           if (requiresApproval) {
             await tx.booking.update({
@@ -1301,7 +1298,7 @@ export class ClientService {
   }
 
   private isIndividualOnlySlot(startAt: Date) {
-    const hour = startAt.getHours();
+    const hour = this.toBelgradeDateTime(startAt).hour;
 
     return hour === 9 || hour === 11;
   }
