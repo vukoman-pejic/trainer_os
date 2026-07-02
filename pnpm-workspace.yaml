@@ -1,3 +1,7 @@
+packages:
+  - "api"
+  - "web"
+
 allowBuilds:
   '@nestjs/core': true
   '@parcel/watcher': true
