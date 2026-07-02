@@ -69,37 +69,39 @@ export default function NewClientPage() {
 
   return (
     <TrainerLayout>
-      <div className="max-w-3xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-3xl font-bold md:text-4xl">
             Add Client
           </h1>
 
-          <p className="text-slate-400 mt-2">
+          <p className="mt-2 text-sm text-slate-400 md:text-base">
             Create a new client account
           </p>
         </div>
 
         {successData ? (
-          <Card className="p-8 space-y-5">
-            <h2 className="text-2xl font-bold">
+          <Card className="space-y-5 p-5 md:p-8">
+            <h2 className="text-xl font-bold md:text-2xl">
               Client Created Successfully 🎉
             </h2>
 
             <div>
-              <p className="text-slate-400">
+              <p className="text-sm text-slate-400 md:text-base">
                 Login Email
               </p>
-              <p className="text-lg font-semibold">
+
+              <p className="break-all text-base font-semibold md:text-lg">
                 {successData.email}
               </p>
             </div>
 
             <div>
-              <p className="text-slate-400">
+              <p className="text-sm text-slate-400 md:text-base">
                 Temporary Password
               </p>
-              <p className="text-lg font-semibold">
+
+              <p className="break-all text-base font-semibold md:text-lg">
                 {successData.temporaryPassword}
               </p>
             </div>
@@ -108,17 +110,18 @@ export default function NewClientPage() {
               onClick={() =>
                 router.push('/dashboard/clients')
               }
+              className="w-full sm:w-auto"
             >
               Back to Clients
             </Button>
           </Card>
         ) : (
-          <Card className="p-8">
+          <Card className="p-5 md:p-8">
             <form
               onSubmit={handleSubmit}
               className="space-y-5"
             >
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <Input
                   placeholder="First Name"
                   value={firstName}
@@ -184,7 +187,7 @@ export default function NewClientPage() {
               />
 
               {error && (
-                <p className="text-red-400">
+                <p className="text-sm text-red-400 md:text-base">
                   {error}
                 </p>
               )}

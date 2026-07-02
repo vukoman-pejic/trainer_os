@@ -126,15 +126,14 @@ export default function WorkoutsPage() {
 
   return (
     <TrainerLayout>
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-4 md:mb-8 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-3xl font-bold md:text-4xl">
             Workouts
           </h1>
 
-          <p className="mt-2 text-slate-400">
-            Create reusable workout
-            templates
+          <p className="mt-2 text-sm leading-relaxed text-slate-400 md:text-base">
+            Create reusable workout templates
           </p>
         </div>
 
@@ -142,127 +141,124 @@ export default function WorkoutsPage() {
           onClick={() =>
             setShowModal(true)
           }
+          className="w-full sm:w-auto"
         >
           <Plus size={18} />
           Create Workout
         </Button>
       </div>
 
-      <div className="space-y-10">
+      <div className="space-y-8 md:space-y-10">
         <section>
           <div className="mb-5 flex items-center gap-3">
-            <Dumbbell size={20} />
-            <h2 className="text-2xl font-semibold">
+            <Dumbbell
+              size={20}
+              className="shrink-0"
+            />
+
+            <h2 className="text-xl font-semibold md:text-2xl">
               Hercules
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            {herculesWorkouts.length ===
-            0 ? (
-              <Card className="col-span-2 p-8 text-slate-400">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+            {herculesWorkouts.length === 0 ? (
+              <Card className="p-6 text-sm text-slate-400 md:p-8 md:text-base lg:col-span-2">
                 No Hercules workouts yet
               </Card>
             ) : (
-              herculesWorkouts.map(
-                (workout) => (
-                  <Card
-                    key={workout.id}
-                    className="p-6"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-xl font-semibold">
-                          {
-                            workout.name
-                          }
-                        </h3>
-                      </div>
-
-                      <Button
-                        variant="ghost"
-                        onClick={() =>
-                          deleteWorkout(
-                            workout.id
-                          )
-                        }
-                      >
-                        Delete
-                      </Button>
+              herculesWorkouts.map((workout) => (
+                <Card
+                  key={workout.id}
+                  className="p-5 md:p-6"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <h3 className="break-words text-lg font-semibold md:text-xl">
+                        {workout.name}
+                      </h3>
                     </div>
 
-                    <pre className="mt-5 whitespace-pre-wrap text-sm text-slate-300">
-                      {
-                        workout.content
+                    <Button
+                      variant="ghost"
+                      onClick={() =>
+                        deleteWorkout(
+                          workout.id
+                        )
                       }
-                    </pre>
-                  </Card>
-                )
-              )
+                      className="w-full sm:w-auto"
+                    >
+                      Delete
+                    </Button>
+                  </div>
+
+                  <pre className="mt-5 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-300">
+                    {workout.content}
+                  </pre>
+                </Card>
+              ))
             )}
           </div>
         </section>
 
         <section>
           <div className="mb-5 flex items-center gap-3">
-            <Dumbbell size={20} />
-            <h2 className="text-2xl font-semibold">
+            <Dumbbell
+              size={20}
+              className="shrink-0"
+            />
+
+            <h2 className="text-xl font-semibold md:text-2xl">
               Reformer
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            {reformerWorkouts.length ===
-            0 ? (
-              <Card className="col-span-2 p-8 text-slate-400">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+            {reformerWorkouts.length === 0 ? (
+              <Card className="p-6 text-sm text-slate-400 md:p-8 md:text-base lg:col-span-2">
                 No Reformer workouts yet
               </Card>
             ) : (
-              reformerWorkouts.map(
-                (workout) => (
-                  <Card
-                    key={workout.id}
-                    className="p-6"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-xl font-semibold">
-                          {
-                            workout.name
-                          }
-                        </h3>
-                      </div>
-
-                      <Button
-                        variant="ghost"
-                        onClick={() =>
-                          deleteWorkout(
-                            workout.id
-                          )
-                        }
-                      >
-                        Delete
-                      </Button>
+              reformerWorkouts.map((workout) => (
+                <Card
+                  key={workout.id}
+                  className="p-5 md:p-6"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <h3 className="break-words text-lg font-semibold md:text-xl">
+                        {workout.name}
+                      </h3>
                     </div>
 
-                    <pre className="mt-5 whitespace-pre-wrap text-sm text-slate-300">
-                      {
-                        workout.content
+                    <Button
+                      variant="ghost"
+                      onClick={() =>
+                        deleteWorkout(
+                          workout.id
+                        )
                       }
-                    </pre>
-                  </Card>
-                )
-              )
+                      className="w-full sm:w-auto"
+                    >
+                      Delete
+                    </Button>
+                  </div>
+
+                  <pre className="mt-5 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-300">
+                    {workout.content}
+                  </pre>
+                </Card>
+              ))
             )}
           </div>
         </section>
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70">
-          <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#111118] p-6 shadow-2xl">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">
+        <div className="fixed inset-0 z-[9999] flex items-end justify-center overflow-y-auto bg-black/70 p-4 md:items-center">
+          <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#111118] p-5 shadow-2xl md:p-6">
+            <div className="mb-5 flex items-center justify-between gap-4 md:mb-6">
+              <h2 className="text-xl font-semibold md:text-2xl">
                 Create Workout
               </h2>
 
@@ -270,6 +266,7 @@ export default function WorkoutsPage() {
                 onClick={() =>
                   setShowModal(false)
                 }
+                className="rounded-xl p-2 transition hover:bg-white/10"
               >
                 <X size={20} />
               </button>
@@ -284,7 +281,7 @@ export default function WorkoutsPage() {
                   )
                 }
                 placeholder="Workout name"
-                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm outline-none focus:border-violet-500/50 md:text-base"
               />
 
               <select
@@ -297,7 +294,7 @@ export default function WorkoutsPage() {
                       | 'REFORMER'
                   )
                 }
-                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm outline-none focus:border-violet-500/50 md:text-base"
               >
                 <option value="HERCULES">
                   Hercules
@@ -316,8 +313,8 @@ export default function WorkoutsPage() {
                   )
                 }
                 placeholder="Workout instructions..."
-                rows={12}
-                className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                rows={10}
+                className="max-h-[45vh] w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm outline-none focus:border-violet-500/50 md:text-base"
               />
 
               <Button

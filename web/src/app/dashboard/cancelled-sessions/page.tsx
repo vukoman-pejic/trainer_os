@@ -82,24 +82,24 @@ export default function CancelledSessionsPage() {
 
   return (
     <TrainerLayout>
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-3xl font-bold md:text-4xl">
           Cancelled Sessions
         </h1>
 
-        <p className="mt-2 text-slate-400">
+        <p className="mt-2 text-sm leading-relaxed text-slate-400 md:text-base">
           Track all cancelled client sessions
         </p>
       </div>
 
       {loading && (
-        <Card className="p-8 text-slate-400">
+        <Card className="p-6 text-sm text-slate-400 md:p-8 md:text-base">
           Loading cancelled sessions...
         </Card>
       )}
 
       {error && (
-        <Card className="p-8 text-red-400">
+        <Card className="p-6 text-sm text-red-400 md:p-8 md:text-base">
           {error}
         </Card>
       )}
@@ -107,12 +107,12 @@ export default function CancelledSessionsPage() {
       {!loading &&
         !error &&
         sessions.length === 0 && (
-          <Card className="p-8">
-            <h2 className="text-xl font-semibold">
+          <Card className="p-6 md:p-8">
+            <h2 className="text-lg font-semibold md:text-xl">
               No cancelled sessions
             </h2>
 
-            <p className="mt-2 text-slate-400">
+            <p className="mt-2 text-sm text-slate-400 md:text-base">
               Everything looks good.
             </p>
           </Card>
@@ -125,11 +125,11 @@ export default function CancelledSessionsPage() {
             {sessions.map((session) => (
               <Card
                 key={session.id}
-                className="p-6"
+                className="p-5 md:p-6"
               >
                 <div className="space-y-3">
                   <div>
-                    <h2 className="text-xl font-semibold">
+                    <h2 className="break-words text-lg font-semibold md:text-xl">
                       {
                         session.client.user
                           .firstName
@@ -141,8 +141,8 @@ export default function CancelledSessionsPage() {
                     </h2>
                   </div>
 
-                  <div className="text-sm text-slate-300 space-y-1">
-                    <p>
+                  <div className="space-y-2 text-sm leading-relaxed text-slate-300">
+                    <p className="break-words">
                       <span className="text-slate-500">
                         Session:
                       </span>{' '}
@@ -151,7 +151,7 @@ export default function CancelledSessionsPage() {
                       )}
                     </p>
 
-                    <p>
+                    <p className="break-words">
                       <span className="text-slate-500">
                         Cancelled at:
                       </span>{' '}
@@ -161,7 +161,7 @@ export default function CancelledSessionsPage() {
                     </p>
 
                     {session.workoutTemplate && (
-                      <p>
+                      <p className="break-words">
                         <span className="text-slate-500">
                           Workout:
                         </span>{' '}
@@ -174,7 +174,7 @@ export default function CancelledSessionsPage() {
                     )}
 
                     {session.cancellationReason && (
-                      <p>
+                      <p className="break-words">
                         <span className="text-slate-500">
                           Reason:
                         </span>{' '}
@@ -189,37 +189,40 @@ export default function CancelledSessionsPage() {
             ))}
           </div>
         )}
-    {!loading &&
-      !error &&
-      totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-center gap-4">
-          <Button
-            variant="ghost"
-            disabled={page === 1}
-            onClick={() =>
-              setPage(page - 1)
-            }
-          >
-            Previous
-          </Button>
 
-          <span className="text-sm text-slate-400">
-            Page {page} of {totalPages}
-          </span>
+      {!loading &&
+        !error &&
+        totalPages > 1 && (
+          <div className="mt-6 grid grid-cols-3 items-center gap-3 md:mt-8">
+            <Button
+              variant="ghost"
+              disabled={page === 1}
+              onClick={() =>
+                setPage(page - 1)
+              }
+              className="w-full"
+            >
+              Previous
+            </Button>
 
-          <Button
-            variant="ghost"
-            disabled={
-              page === totalPages
-            }
-            onClick={() =>
-              setPage(page + 1)
-            }
-          >
-            Next
-          </Button>
-        </div>
-      )}
+            <span className="text-center text-xs text-slate-400 sm:text-sm">
+              Page {page} of {totalPages}
+            </span>
+
+            <Button
+              variant="ghost"
+              disabled={
+                page === totalPages
+              }
+              onClick={() =>
+                setPage(page + 1)
+              }
+              className="w-full"
+            >
+              Next
+            </Button>
+          </div>
+        )}
     </TrainerLayout>
   );
 }

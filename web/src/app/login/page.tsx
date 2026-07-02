@@ -53,11 +53,11 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#07070B] text-white flex">
-      <div className="hidden lg:flex flex-1 flex-col justify-center px-20">
+    <main className="flex min-h-screen bg-[#07070B] text-white">
+      <div className="hidden flex-1 flex-col justify-center px-20 lg:flex">
         <div className="max-w-xl">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center">
+          <div className="mb-8 flex items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600">
               <Dumbbell size={28} />
             </div>
 
@@ -74,20 +74,24 @@ export default function LoginPage() {
             Grow your business.
           </h2>
 
-          <p className="mt-8 text-xl text-slate-400 leading-relaxed">
-            A premium operating system for modern
-            trainers and boutique fitness studios.
+          <p className="mt-8 text-xl leading-relaxed text-slate-400">
+            A premium operating system for modern trainers and boutique fitness studios.
           </p>
         </div>
       </div>
 
-      <div className="flex flex-1 items-center justify-center px-6">
-        <Card className="w-full max-w-md p-8">
-          <div className="mb-8">
-            <h3 className="text-3xl font-bold">
+      <div className="flex flex-1 items-center justify-center px-4 py-8 sm:px-6">
+        <Card className="w-full max-w-md p-5 sm:p-8">
+          <div className="mb-8 text-center sm:text-left">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 lg:hidden">
+              <Dumbbell size={28} />
+            </div>
+
+            <h3 className="text-2xl font-bold sm:text-3xl">
               Welcome back
             </h3>
-            <p className="mt-2 text-slate-400">
+
+            <p className="mt-2 text-sm text-slate-400 sm:text-base">
               Sign in to your account
             </p>
           </div>
@@ -115,7 +119,7 @@ export default function LoginPage() {
             />
 
             {error && (
-              <p className="text-red-400 text-sm">
+              <p className="text-sm text-red-400">
                 {error}
               </p>
             )}

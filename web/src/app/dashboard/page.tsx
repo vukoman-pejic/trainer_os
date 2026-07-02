@@ -93,35 +93,40 @@ export default function DashboardPage() {
 
   return (
     <TrainerLayout>
-      <div className="mb-10 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-4 md:mb-10 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-3xl font-bold md:text-4xl">
             Trainer Dashboard
           </h1>
 
-          <p className="mt-2 text-slate-400">
+          <p className="mt-2 text-sm text-slate-400 md:text-base">
             Your operational overview
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:flex">
           <Link href="/dashboard/clients/new">
-            <Button>+ New Client</Button>
+            <Button className="w-full sm:w-auto">
+              + New Client
+            </Button>
           </Link>
 
           <Link href="/dashboard/calendar">
-            <Button variant="ghost">
+            <Button
+              variant="ghost"
+              className="w-full sm:w-auto"
+            >
               Full Calendar
             </Button>
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6 mb-8">
-        <Card className="p-6">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6 md:mb-8">
+        <Card className="p-5 md:p-6">
           <Users size={28} />
 
-          <p className="mt-4 text-slate-400">
+          <p className="mt-4 text-sm text-slate-400 md:text-base">
             Active Clients
           </p>
 
@@ -130,144 +135,114 @@ export default function DashboardPage() {
           </h3>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-5 md:p-6">
           <Calendar size={28} />
 
-          <p className="mt-4 text-slate-400">
+          <p className="mt-4 text-sm text-slate-400 md:text-base">
             Today's Sessions
           </p>
 
           <h3 className="mt-2 text-3xl font-bold">
-            {
-              dashboard.todaySessions
-                .length
-            }
+            {dashboard.todaySessions.length}
           </h3>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-5 md:p-6 sm:col-span-2 xl:col-span-1">
           <Clock size={28} />
 
-          <p className="mt-4 text-slate-400">
+          <p className="mt-4 text-sm text-slate-400 md:text-base">
             Upcoming This Week
           </p>
 
           <h3 className="mt-2 text-3xl font-bold">
-            {
-              dashboard.upcomingThisWeek
-            }
+            {dashboard.upcomingThisWeek}
           </h3>
         </Card>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <Card className="p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+        <Card className="p-5 md:p-6">
+          <div className="mb-5 flex items-center justify-between md:mb-6">
+            <h2 className="text-xl font-semibold md:text-2xl">
               Today
             </h2>
           </div>
 
           <div className="space-y-3">
-            {dashboard.todaySessions
-              .length === 0 ? (
-              <p className="text-slate-400">
+            {dashboard.todaySessions.length === 0 ? (
+              <p className="text-sm text-slate-400 md:text-base">
                 No sessions today
               </p>
             ) : (
-              dashboard.todaySessions.map(
-                (session) => (
-                  <Link
-                    key={session.id}
-                    href={`/dashboard/clients/${session.client.id}`}
-                  >
-                    <div className="rounded-xl border border-white/10 p-4 transition hover:bg-white/5">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold">
-                            {
-                              session.client
-                                .user
-                                .firstName
-                            }{' '}
-                            {
-                              session.client
-                                .user
-                                .lastName
-                            }
-                          </p>
+              dashboard.todaySessions.map((session) => (
+                <Link
+                  key={session.id}
+                  href={`/dashboard/clients/${session.client.id}`}
+                >
+                  <div className="rounded-xl border border-white/10 p-4 transition hover:bg-white/5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="break-words font-semibold">
+                          {session.client.user.firstName}{' '}
+                          {session.client.user.lastName}
+                        </p>
 
-                          <p className="mt-1 text-sm text-slate-400">
-                            {formatTime(
-                              session.startAt
-                            )}
-                          </p>
-                        </div>
-
-                        <ArrowRight
-                          size={18}
-                        />
+                        <p className="mt-1 text-sm text-slate-400">
+                          {formatTime(session.startAt)}
+                        </p>
                       </div>
+
+                      <ArrowRight
+                        size={18}
+                        className="shrink-0"
+                      />
                     </div>
-                  </Link>
-                )
-              )
+                  </div>
+                </Link>
+              ))
             )}
           </div>
         </Card>
 
-        <Card className="p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">
+        <Card className="p-5 md:p-6">
+          <div className="mb-5 flex items-center justify-between md:mb-6">
+            <h2 className="text-xl font-semibold md:text-2xl">
               Tomorrow
             </h2>
           </div>
 
           <div className="space-y-3">
-            {dashboard
-              .tomorrowSessions
-              .length === 0 ? (
-              <p className="text-slate-400">
+            {dashboard.tomorrowSessions.length === 0 ? (
+              <p className="text-sm text-slate-400 md:text-base">
                 No sessions tomorrow
               </p>
             ) : (
-              dashboard.tomorrowSessions.map(
-                (session) => (
-                  <Link
-                    key={session.id}
-                    href={`/dashboard/clients/${session.client.id}`}
-                  >
-                    <div className="rounded-xl border border-white/10 p-4 transition hover:bg-white/5">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold">
-                            {
-                              session.client
-                                .user
-                                .firstName
-                            }{' '}
-                            {
-                              session.client
-                                .user
-                                .lastName
-                            }
-                          </p>
+              dashboard.tomorrowSessions.map((session) => (
+                <Link
+                  key={session.id}
+                  href={`/dashboard/clients/${session.client.id}`}
+                >
+                  <div className="rounded-xl border border-white/10 p-4 transition hover:bg-white/5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="break-words font-semibold">
+                          {session.client.user.firstName}{' '}
+                          {session.client.user.lastName}
+                        </p>
 
-                          <p className="mt-1 text-sm text-slate-400">
-                            {formatTime(
-                              session.startAt
-                            )}
-                          </p>
-                        </div>
-
-                        <ArrowRight
-                          size={18}
-                        />
+                        <p className="mt-1 text-sm text-slate-400">
+                          {formatTime(session.startAt)}
+                        </p>
                       </div>
+
+                      <ArrowRight
+                        size={18}
+                        className="shrink-0"
+                      />
                     </div>
-                  </Link>
-                )
-              )
+                  </div>
+                </Link>
+              ))
             )}
           </div>
         </Card>

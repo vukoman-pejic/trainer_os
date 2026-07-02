@@ -55,16 +55,19 @@ export default function ClientsPage() {
 
   return (
     <TrainerLayout>
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-4 md:mb-8 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-4xl font-bold">Clients</h1>
-          <p className="mt-2 text-slate-400">
+          <h1 className="text-3xl font-bold md:text-4xl">
+            Clients
+          </h1>
+
+          <p className="mt-2 text-sm leading-relaxed text-slate-400 md:text-base">
             Manage your client base and training progress
           </p>
         </div>
 
         <Link href="/dashboard/clients/new">
-          <Button>
+          <Button className="w-full sm:w-auto">
             <Plus size={18} />
             Add Client
           </Button>
@@ -72,21 +75,24 @@ export default function ClientsPage() {
       </div>
 
       {loading && (
-        <Card className="p-8 text-slate-400">
+        <Card className="p-6 text-sm text-slate-400 md:p-8 md:text-base">
           Loading clients...
         </Card>
       )}
 
       {error && (
-        <Card className="p-8 text-red-400">
+        <Card className="p-6 text-sm text-red-400 md:p-8 md:text-base">
           {error}
         </Card>
       )}
 
       {!loading && !error && clients.length === 0 && (
-        <Card className="p-8">
-          <h2 className="text-xl font-semibold">No clients yet</h2>
-          <p className="mt-2 text-slate-400">
+        <Card className="p-6 md:p-8">
+          <h2 className="text-lg font-semibold md:text-xl">
+            No clients yet
+          </h2>
+
+          <p className="mt-2 text-sm leading-relaxed text-slate-400 md:text-base">
             Create your first client to start managing packages and sessions.
           </p>
         </Card>
@@ -99,35 +105,48 @@ export default function ClientsPage() {
               key={client.id}
               href={`/dashboard/clients/${client.id}`}
             >
-              <Card className="p-6 transition hover:border-violet-500/50 hover:bg-white/[0.07]">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600">
+              <Card className="p-5 transition hover:border-violet-500/50 hover:bg-white/[0.07] md:p-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex min-w-0 items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 md:h-14 md:w-14">
                       <User size={24} />
                     </div>
 
-                    <div>
-                      <h2 className="text-xl font-semibold">
-                        {client.user.firstName} {client.user.lastName}
+                    <div className="min-w-0">
+                      <h2 className="break-words text-lg font-semibold md:text-xl">
+                        {client.user.firstName}{' '}
+                        {client.user.lastName}
                       </h2>
 
-                      <div className="mt-2 flex flex-wrap gap-4 text-sm text-slate-400">
-                        <span className="flex items-center gap-2">
-                          <Mail size={15} />
-                          {client.user.email}
+                      <div className="mt-3 flex flex-col gap-2 text-sm text-slate-400 sm:flex-row sm:flex-wrap sm:gap-4">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <Mail
+                            size={15}
+                            className="shrink-0"
+                          />
+
+                          <span className="break-all">
+                            {client.user.email}
+                          </span>
                         </span>
 
                         {client.user.phone && (
-                          <span className="flex items-center gap-2">
-                            <Phone size={15} />
-                            {client.user.phone}
+                          <span className="flex min-w-0 items-center gap-2">
+                            <Phone
+                              size={15}
+                              className="shrink-0"
+                            />
+
+                            <span className="break-words">
+                              {client.user.phone}
+                            </span>
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <span className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300">
+                  <span className="inline-flex w-full items-center justify-center rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300 lg:w-auto">
                     View Details
                   </span>
                 </div>

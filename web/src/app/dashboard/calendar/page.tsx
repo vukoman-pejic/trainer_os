@@ -106,6 +106,9 @@ export default function CalendarPage() {
       y: 0,
     });
 
+  const [isMobilePopup, setIsMobilePopup] =
+    useState(false);
+
   const [rescheduleDate, setRescheduleDate] =
     useState('');
 
@@ -302,13 +305,13 @@ export default function CalendarPage() {
 
   return (
     <TrainerLayout>
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-4 md:mb-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-3xl font-bold md:text-4xl">
             Weekly Calendar
           </h1>
 
-          <p className="mt-2 text-slate-400">
+          <p className="mt-2 text-sm text-slate-400 md:text-base">
             {formatHeaderDate(
               calendar.weekStart
             )}{' '}
@@ -319,7 +322,7 @@ export default function CalendarPage() {
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3">
           <Button
             variant="ghost"
             onClick={() =>
@@ -344,14 +347,14 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="grid min-w-[1200px] grid-cols-8 gap-3">
-          <div />
+      <div className="overflow-x-auto rounded-2xl pb-3">
+        <div className="grid min-w-[980px] grid-cols-8 gap-2 md:min-w-[1200px] md:gap-3">
+          <div className="sticky left-0 z-20 bg-[#07070B]" />
 
           {DAYS.map((day, index) => (
             <Card
               key={day}
-              className="p-4 text-center"
+              className="p-3 text-center md:p-4"
             >
               <p className="font-semibold">
                 {day}
@@ -368,7 +371,7 @@ export default function CalendarPage() {
               key={slot}
               className="contents"
             >
-              <Card className="flex items-center justify-center p-4">
+              <Card className="sticky left-0 z-10 flex items-center justify-center bg-[#111118] p-3 md:p-4">
                 <p className="font-semibold">
                   {slot}
                 </p>
@@ -385,7 +388,7 @@ export default function CalendarPage() {
                   return (
                     <Card
                       key={`${slot}-${dayIndex}`}
-                      className="min-h-[120px] p-3"
+                      className="min-h-[105px] p-2 md:min-h-[120px] md:p-3"
                     >
                       <div className="space-y-2">
                         {sessions.map(
@@ -404,6 +407,18 @@ export default function CalendarPage() {
                                   );
                                   return;
                                 }
+
+                                const isMobile =
+                                  window.innerWidth < 768;
+
+                                setIsMobilePopup(isMobile);
+
+                                if (isMobile) {
+                                  setPopupPosition({
+                                    x: 0,
+                                    y: 0,
+                                  });
+                                } else {
 
                                 const rect =
                                   e.currentTarget.getBoundingClientRect();
@@ -451,6 +466,7 @@ export default function CalendarPage() {
                                     y,
                                   }
                                 );
+                            }
 
                                 setRescheduleDate(
                                   getNextDayFromBooking(
@@ -468,14 +484,14 @@ export default function CalendarPage() {
                                   session
                                 );
                               }}
-                              className={`w-full rounded-lg border-l-4 p-3 text-left transition hover:bg-white/10 ${
+                              className={`w-full rounded-lg border-l-4 p-2 text-left transition hover:bg-white/10 md:p-3 ${
                                 session.clientPackage.paymentStatus ===
                                 'PAID'
                                   ? 'border-l-emerald-500 border-white/10 bg-emerald-500/10'
                                   : 'border-l-red-500 border-white/10 bg-red-500/10'
                               }`}
                             >
-                              <p className="text-sm font-semibold">
+                              <p className="break-words text-xs font-semibold md:text-sm">
                                 {
                                   session
                                     .client
@@ -507,7 +523,7 @@ export default function CalendarPage() {
                                 </span>
                               </div>
                               {session.workoutTemplate && (
-                                <p className="mt-1 text-xs text-violet-300">
+                                <p className="mt-1 break-words text-[11px] text-violet-300 md:text-xs">
                                   {session.workoutTemplate.name}
                                 </p>
                               )}
@@ -525,15 +541,37 @@ export default function CalendarPage() {
       </div>
 
       {selectedBooking && (
-        <div
-          style={{
-            position: 'fixed',
-            left: popupPosition.x,
-            top: popupPosition.y,
-            zIndex: 99999,
-          }}
-          className="w-80 max-h-[85vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#111118] p-5 shadow-2xl"
-        >
+        <>
+          {isMobilePopup && (
+            <button
+              className="fixed inset-0 z-[99998] bg-black/50"
+              onClick={() => {
+                setSelectedBooking(null);
+                setSelectedWorkoutId('');
+                setRescheduleDate('');
+                setRescheduleTime('');
+              }}
+              aria-label="Close booking popup"
+            />
+          )}
+
+          <div
+            style={
+              isMobilePopup
+                ? undefined
+                : {
+                    position: 'fixed',
+                    left: popupPosition.x,
+                    top: popupPosition.y,
+                    zIndex: 99999,
+                  }
+            }
+            className={
+              isMobilePopup
+                ? 'fixed inset-x-4 bottom-4 z-[99999] max-h-[82vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#111118] p-5 shadow-2xl'
+                : 'w-80 max-h-[85vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#111118] p-5 shadow-2xl'
+            }
+          >
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h3 className="font-semibold">
@@ -564,17 +602,18 @@ export default function CalendarPage() {
             </button>
           </div>
 
-          <div className="mb-5 flex gap-2">
+          <div className="mb-5 grid grid-cols-2 gap-2">
             <Link
               href={`/dashboard/clients/${selectedBooking.client.id}`}
+              className="w-full"
             >
-              <Button variant="ghost">
+              <Button variant="ghost" className="w-full">
                 Open Client
               </Button>
             </Link>
 
             <Button
-              className="border border-red-500/30 text-red-400 hover:bg-red-500/10"
+              className="w-full border border-red-500/30 text-red-400 hover:bg-red-500/10"
               disabled={actionLoading}
               onClick={cancelBooking}
             >
@@ -679,6 +718,7 @@ export default function CalendarPage() {
             </Button>
           </div>
         </div>
+       </>
       )}
     </TrainerLayout>
   );

@@ -71,18 +71,18 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#07070B] text-white flex items-center justify-center px-6">
-      <Card className="w-full max-w-md p-8">
+    <main className="flex min-h-screen items-center justify-center bg-[#07070B] px-4 py-8 text-white sm:px-6">
+      <Card className="w-full max-w-md p-5 sm:p-8">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 sm:h-16 sm:w-16">
             <Lock size={28} />
           </div>
 
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-2xl font-bold sm:text-3xl">
             Change Password
           </h1>
 
-          <p className="mt-2 text-slate-400">
+          <p className="mt-2 text-sm text-slate-400 sm:text-base">
             Set your new secure password
           </p>
         </div>
@@ -121,7 +121,7 @@ export default function ChangePasswordPage() {
           />
 
           {error && (
-            <p className="text-red-400 text-sm">
+            <p className="text-sm text-red-400">
               {error}
             </p>
           )}

@@ -520,23 +520,24 @@ export default function ClientDetailsPage() {
 
       {client && (
         <>
-          <div className="mb-8 flex items-start justify-between">
+          <div className="mb-6 flex flex-col gap-4 md:mb-8 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <h1 className="text-4xl font-bold">
+              <h1 className="break-words text-3xl font-bold md:text-4xl">
                 {client?.user?.firstName}{' '}
                 {client?.user?.lastName}
               </h1>
 
-              <p className="mt-2 text-slate-400">
+              <p className="mt-2 text-sm text-slate-400 md:text-base">
                 Client details and session overview
               </p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex">
               <Button
                 variant="ghost"
                 disabled={resettingPassword}
                 onClick={resetClientPassword}
+                className="w-full lg:w-auto"
               >
                 {resettingPassword
                   ? 'Resetting...'
@@ -548,33 +549,38 @@ export default function ClientDetailsPage() {
                 onClick={() =>
                   setShowDeleteConfirm(true)
                 }
+                className="w-full lg:w-auto"
               >
                 Delete Client
               </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            <Card className="p-6">
-              <h2 className="mb-6 text-xl font-semibold">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+            <Card className="p-5 md:p-6">
+              <h2 className="mb-5 text-lg font-semibold md:mb-6 md:text-xl">
                 Basic Information
               </h2>
 
               <div className="space-y-4 text-slate-300">
-                <div className="flex items-center gap-3">
-                  <Mail size={18} />
-                  {client.user.email}
+                <div className="flex min-w-0 items-center gap-3">
+                  <Mail size={18} className="shrink-0" />
+                  <span className="break-all">
+                    {client.user.email}
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <Phone size={18} />
-                  {client.user.phone || 'No phone'}
+                <div className="flex min-w-0 items-center gap-3">
+                  <Phone size={18} className="shrink-0" />
+                  <span className="break-words">
+                    {client.user.phone || 'No phone'}
+                  </span>
                 </div>
               </div>
             </Card>
 
-            <Card className="p-6">
-              <h2 className="mb-6 text-xl font-semibold">
+            <Card className="p-5 md:p-6">
+              <h2 className="mb-5 text-lg font-semibold md:mb-6 md:text-xl">
                 Fitness Profile
               </h2>
 
@@ -617,23 +623,23 @@ export default function ClientDetailsPage() {
             </Card>
           </div>
 
-          <div className="mt-8">
-            <Card className="p-6">
-              <h2 className="mb-6 text-xl font-semibold">
+          <div className="mt-6 md:mt-8">
+            <Card className="p-5 md:p-6">
+              <h2 className="mb-5 text-lg font-semibold md:mb-6 md:text-xl">
                 Package Management
               </h2>
 
               {client.clientPackages.length > 0 ? (
                 <div className="space-y-4">
                   <div>
-                    <p className="text-2xl font-bold">
+                    <p className="break-words text-xl font-bold md:text-2xl">
                       {
                         client.clientPackages[0]
                           .package.name
                       }
                     </p>
 
-                    <p className="mt-2 text-slate-400">
+                    <p className="mt-2 text-sm text-slate-400 md:text-base">
                       Remaining sessions:{' '}
                       {
                         client.clientPackages[0]
@@ -641,7 +647,7 @@ export default function ClientDetailsPage() {
                       }
                     </p>
 
-                    <p className="mt-2 text-slate-400">
+                    <p className="mt-2 text-sm text-slate-400 md:text-base">
                       Payment:{' '}
                       {
                         client.clientPackages[0]
@@ -671,7 +677,7 @@ export default function ClientDetailsPage() {
                     No active package assigned
                   </p>
 
-                  <div className="flex flex-wrap gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap">
                     {packages.map((pkg) => (
                       <Button
                         key={pkg.id}
@@ -680,6 +686,7 @@ export default function ClientDetailsPage() {
                           setSelectedPackage(pkg);
                           setShowAssignConfirm(true);
                         }}
+                        className="w-full lg:w-auto"
                       >
                         {pkg.name}
                       </Button>
@@ -690,9 +697,9 @@ export default function ClientDetailsPage() {
             </Card>
           </div>
 
-          <div className="mt-8 grid grid-cols-2 gap-6">
-            <Card className="p-6">
-              <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
+          <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6 md:mt-8">
+            <Card className="p-5 md:p-6">
+              <h2 className="mb-5 flex items-center gap-2 text-lg font-semibold md:mb-6 md:text-xl">
                 <Calendar size={20} />
                 Book Training
               </h2>
@@ -749,8 +756,8 @@ export default function ClientDetailsPage() {
               </div>
             </Card>
 
-            <Card className="p-6">
-              <h2 className="mb-6 text-xl font-semibold">
+            <Card className="p-5 md:p-6">
+              <h2 className="mb-5 text-lg font-semibold md:mb-6 md:text-xl">
                 Upcoming Sessions
               </h2>
 
@@ -869,9 +876,10 @@ export default function ClientDetailsPage() {
                             ))}
                           </select>
 
-                          <div className="flex gap-2">
+                          <div className="grid grid-cols-2 gap-2 sm:flex">
                             <Button
                               size="default"
+                              className="w-full sm:w-auto"
                               disabled={rescheduleLoading}
                               onClick={rescheduleBooking}
                             >
@@ -882,6 +890,7 @@ export default function ClientDetailsPage() {
 
                             <Button
                               size="default"
+                              className="w-full sm:w-auto"
                               variant="ghost"
                               onClick={() => {
                                 setRescheduleBookingId(null);
@@ -893,14 +902,15 @@ export default function ClientDetailsPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="mt-3 flex items-center justify-between">
+                        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <p className="text-sm text-slate-400">
                             {booking.status}
                           </p>
 
-                          <div className="flex gap-2">
+                          <div className="grid grid-cols-2 gap-2 sm:flex">
                             <Button
                               size="default"
+                              className="w-full sm:w-auto"
                               variant="ghost"
                               onClick={() => {
                                 setRescheduleBookingId(
@@ -914,6 +924,7 @@ export default function ClientDetailsPage() {
 
                             <Button
                               size="default"
+                              className="w-full sm:w-auto"
                               variant="ghost"
                               disabled={
                                 cancelLoadingId === booking.id
@@ -934,8 +945,8 @@ export default function ClientDetailsPage() {
                 )}
               </div>
             </Card>
-            <Card className="p-6">
-              <h2 className="mb-6 text-xl font-semibold">
+            <Card className="p-5 md:p-6">
+              <h2 className="mb-5 text-lg font-semibold md:mb-6 md:text-xl">
                 Past Sessions
               </h2>
 
@@ -991,7 +1002,7 @@ export default function ClientDetailsPage() {
                         </div>
                       ) : (
                         <Button
-                          className="mt-4"
+                          className="mt-4 w-full sm:w-auto"
                           onClick={() =>
                             openWorkoutLogModal(booking)
                           }
@@ -1008,8 +1019,8 @@ export default function ClientDetailsPage() {
         </>
       )}
     {showDeleteConfirm && (
-      <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70">
-        <Card className="w-full max-w-md p-6">
+      <div className="fixed inset-0 z-[99999] flex items-end justify-center bg-black/70 p-4 md:items-center">
+        <Card className="w-full max-w-md p-5 md:p-6">
           <h2 className="text-xl font-semibold">
             Delete Client
           </h2>
@@ -1020,7 +1031,7 @@ export default function ClientDetailsPage() {
             history.
           </p>
 
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 grid grid-cols-2 gap-3">
             <Button
               variant="ghost"
               className="flex-1"
@@ -1046,8 +1057,8 @@ export default function ClientDetailsPage() {
       </div>
     )}
     {showAssignConfirm && selectedPackage && (
-      <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70">
-        <Card className="w-full max-w-md p-6">
+      <div className="fixed inset-0 z-[99999] flex items-end justify-center bg-black/70 p-4 md:items-center">
+        <Card className="w-full max-w-md p-5 md:p-6">
           <h2 className="text-xl font-semibold">
             Assign Package
           </h2>
@@ -1069,7 +1080,7 @@ export default function ClientDetailsPage() {
             </p>
           </div>
 
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 grid grid-cols-2 gap-3">
             <Button
               variant="ghost"
               className="flex-1"
@@ -1096,8 +1107,8 @@ export default function ClientDetailsPage() {
     )}
     {showWorkoutLogModal &&
       selectedBookingForLog && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70">
-          <Card className="max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6">
+        <div className="fixed inset-0 z-[99999] flex items-end justify-center bg-black/70 p-4 md:items-center">
+          <Card className="max-h-[85vh] w-full max-w-2xl overflow-y-auto p-5 md:p-6">
             <h2 className="text-xl font-semibold">
               Workout Results
             </h2>
@@ -1113,7 +1124,7 @@ export default function ClientDetailsPage() {
                       {exercise.name}
                     </p>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <input
                         placeholder="Weight (kg)"
                         value={
@@ -1169,7 +1180,7 @@ export default function ClientDetailsPage() {
                 className="min-h-[120px] w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3"
               />
 
-              <div className="flex gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant="ghost"
                   className="flex-1"
