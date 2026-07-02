@@ -650,7 +650,7 @@ export class ClientService {
             profile.trainerId,
             NotificationType.CLIENT_BOOKED,
             'New Session Booked',
-            `${booking.client.user.firstName} ${booking.client.user.lastName} cancelled a session on ${this.formatBelgradeDateTime(booking.startAt)}`
+            `${profile.user.firstName} ${profile.user.lastName} booked a session at ${this.formatBelgradeDateTime(startAt)}`
           );
 
           await tx.clientPackage.update({
