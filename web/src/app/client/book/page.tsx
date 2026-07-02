@@ -461,16 +461,22 @@ export default function ClientBookPage() {
                           .map((slot) => (
                             <button
                               key={slot.startAt}
-                              onClick={() =>
-                                handleSlotClick(slot)
+                              disabled={
+                                processing ||
+                                slot.isFull ||
+                                slot.bookedByClient ||
+                                !slot.isBookable
                               }
-                              className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition ${
+                              onClick={() =>
+                                rescheduleBooking(slot)
+                              }
+                              className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-40 ${
                                 slot.bookedByClient
                                   ? 'border-violet-500 bg-violet-500/20'
                                   : !slot.isBookable
-                                  ? 'border-white/10 bg-black/10 opacity-40'
+                                  ? 'border-white/10 bg-black/10'
                                   : slot.isFull
-                                  ? 'border-red-500/20 bg-red-500/10 opacity-60'
+                                  ? 'border-red-500/20 bg-red-500/10'
                                   : 'border-white/10 bg-black/20 hover:bg-white/5'
                               }`}
                             >
@@ -481,7 +487,7 @@ export default function ClientBookPage() {
 
                                 <p className="mt-1 text-xs text-slate-400">
                                   {slot.bookedByClient
-                                    ? 'Your booking'
+                                    ? 'Current booking'
                                     : !slot.isBookable
                                     ? 'Current week'
                                     : slot.isFull
