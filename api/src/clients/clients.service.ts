@@ -73,11 +73,8 @@ export class ClientsService {
     };
   }
 
-  async findAll(trainerId: string) {
+  async findAll(_trainerId: string) {
     return this.prisma.clientProfile.findMany({
-      where: {
-        trainerId,
-      },
       include: {
         user: true,
       },
@@ -85,7 +82,7 @@ export class ClientsService {
   }
 
   async findOne(
-    trainerId: string,
+    _trainerId: string,
     clientId: string
   ) {
     const now = new Date();
@@ -94,7 +91,6 @@ export class ClientsService {
       await this.prisma.clientProfile.findFirst({
         where: {
           id: clientId,
-          trainerId,
         },
         include: {
           user: true,
@@ -188,15 +184,12 @@ export class ClientsService {
   }
 
   async findBookings(
-    trainerId: string,
+    _trainerId: string,
     clientId: string
   ) {
     return this.prisma.booking.findMany({
       where: {
         clientId,
-        client: {
-          trainerId,
-        },
         endAt: {
           gt: new Date(),
         },
@@ -222,14 +215,13 @@ export class ClientsService {
   }
 
   async remove(
-    trainerId: string,
+    _trainerId: string,
     clientId: string
   ) {
     const client =
       await this.prisma.clientProfile.findFirst({
         where: {
           id: clientId,
-          trainerId,
         },
         include: {
           user: true,
@@ -272,14 +264,13 @@ export class ClientsService {
   }
 
   async resetPassword(
-    trainerId: string,
+    _trainerId: string,
     clientId: string
   ) {
     const client =
       await this.prisma.clientProfile.findFirst({
         where: {
           id: clientId,
-          trainerId,
         },
         include: {
           user: true,

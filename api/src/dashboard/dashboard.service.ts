@@ -9,7 +9,7 @@ export class DashboardService {
     private readonly prisma: PrismaService
   ) {}
 
-  async getTrainerDashboard(trainerId: string) {
+  async getTrainerDashboard(_trainerId: string) {
     const now = new Date();
 
     const todayStart = new Date(now);
@@ -61,9 +61,6 @@ export class DashboardService {
     ] = await Promise.all([
       this.prisma.booking.findMany({
         where: {
-          client: {
-            trainerId,
-          },
           status: {
             in: [
               BookingStatus.CONFIRMED,
@@ -90,9 +87,6 @@ export class DashboardService {
 
       this.prisma.booking.findMany({
         where: {
-          client: {
-            trainerId,
-          },
           status: {
             in: [
               BookingStatus.CONFIRMED,
@@ -117,17 +111,10 @@ export class DashboardService {
         },
       }),
 
-      this.prisma.clientProfile.count({
-        where: {
-          trainerId,
-        },
-      }),
+      this.prisma.clientProfile.count(),
 
       this.prisma.booking.count({
         where: {
-          client: {
-            trainerId,
-          },
           status: {
             in: [
               BookingStatus.CONFIRMED,
@@ -151,7 +138,7 @@ export class DashboardService {
   }
 
   async getCalendar(
-    trainerId: string,
+    _trainerId: string,
     weekOffset = 0
   ) {
     const today = new Date();
@@ -177,9 +164,6 @@ export class DashboardService {
     const sessions =
       await this.prisma.booking.findMany({
         where: {
-          client: {
-            trainerId,
-          },
           status: {
             in: [
               BookingStatus.CONFIRMED,
@@ -276,7 +260,7 @@ export class DashboardService {
   }
 
   async getCancelledSessions(
-    trainerId: string,
+    _trainerId: string,
     page = 1
   ) {
     const limit = 10;
@@ -286,9 +270,6 @@ export class DashboardService {
       await Promise.all([
         this.prisma.booking.findMany({
           where: {
-            client: {
-              trainerId,
-            },
             status: BookingStatus.CANCELLED,
           },
           include: {
@@ -308,9 +289,6 @@ export class DashboardService {
 
         this.prisma.booking.count({
           where: {
-            client: {
-              trainerId,
-            },
             status: BookingStatus.CANCELLED,
           },
         }),
