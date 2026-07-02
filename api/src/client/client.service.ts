@@ -55,9 +55,14 @@ export class ClientService {
   }
 
   private getSlotCapacity(date: Date) {
-    const hour = this.toBelgradeDateTime(date).hour;
+    const belgradeDate = this.toBelgradeDateTime(date);
 
-    if (hour === 9 || hour === 11) {
+    const day = belgradeDate.weekday % 7;
+    const hour = belgradeDate.hour;
+
+    const isSaturday = day === 6;
+
+    if (!isSaturday && (hour === 9 || hour === 11)) {
       return 1;
     }
 
@@ -1286,9 +1291,14 @@ export class ClientService {
   }
 
   private isIndividualOnlySlot(startAt: Date) {
-    const hour = this.toBelgradeDateTime(startAt).hour;
+    const belgradeDate = this.toBelgradeDateTime(startAt);
 
-    return hour === 9 || hour === 11;
+    const day = belgradeDate.weekday % 7;
+    const hour = belgradeDate.hour;
+
+    const isSaturday = day === 6;
+
+    return !isSaturday && (hour === 9 || hour === 11);
   }
 
   private isIndividualPackage(packageName: string) {
