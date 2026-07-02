@@ -31,18 +31,11 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Start Nx Cloud CI
-        run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Format check
-        run: pnpm nx record -- pnpm nx format:check --base="remotes/origin/main"
+        run: pnpm exec nx format:check --base="remotes/origin/main"
 
       - name: Build and typecheck
-        run: pnpm nx run-many -t build typecheck --exclude=api-e2e
-
-      - name: Nx Cloud fix CI
-        run: pnpm nx fix-ci
-        if: always()
+        run: pnpm exec nx run-many -t build typecheck --exclude=api-e2e
